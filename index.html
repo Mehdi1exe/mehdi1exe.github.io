@@ -2,741 +2,595 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>GAMING | 3D Racing - Vermeide die Bäume!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Minecraft Style Welt - First Person Erkundung</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            background: #0a0014;
-            color: #f0f0f0;
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            text-align: center;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Minecraft', 'Courier New', monospace;
         }
-
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 10%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid rgba(138, 43, 226, 0.5);
-        }
-
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #00eaff, #8a2be2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .nav-links a {
-            color: #ddd;
-            text-decoration: none;
-            margin-left: 30px;
-            font-size: 18px;
-            transition: 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #00eaff;
-            text-shadow: 0 0 6px #00eaff;
-        }
-
-        .hero {
-            padding: 100px 20px 120px;
-            background: radial-gradient(circle at 20% 30%, #120024, #00040a);
-            border-bottom: 2px solid rgba(0, 234, 255, 0.2);
-        }
-
-        h1 {
-            font-size: clamp(2.5rem, 8vw, 5rem);
-            color: #00eaff;
-            text-shadow: 0 0 15px #00eaff, 0 0 30px #8a2be2;
-        }
-
-        .hero p {
-            font-size: 1.4rem;
-            margin: 20px 0 30px;
-            color: #ccc;
-        }
-
-        .btn-game {
-            background: linear-gradient(135deg, #8a2be2, #5a1a9e);
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
             color: white;
-            padding: 16px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 18px #8a2be2;
-            transition: 0.25s;
-            margin: 0 10px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+            z-index: 10;
+            font-size: 14px;
+            border-left: 4px solid #44aa44;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-
-        .btn-game:hover {
-            transform: scale(1.05);
-            background: #00eaff;
-            box-shadow: 0 0 28px #00eaff;
-            color: #0a0014;
-        }
-
-        .btn-stop {
-            background: #2c1a3a;
-            box-shadow: 0 0 8px #aa66ff;
-        }
-
-        .btn-stop:hover {
-            background: #ff4444;
-            box-shadow: 0 0 20px #ff4444;
-            color: white;
-        }
-
-        #gameContainer {
-            display: none;
-            margin: 40px auto;
-            width: 90%;
-            max-width: 1100px;
-            background: #000000aa;
-            border-radius: 32px;
-            padding: 20px;
-            backdrop-filter: blur(4px);
-            border: 1px solid #8a2be2;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        #canvas3d {
-            width: 100%;
-            height: 550px;
-            border-radius: 24px;
-            display: block;
-            background: #0a1a2a;
-        }
-
-        .game-info {
-            font-size: 1.2rem;
-            color: #00eaff;
-            text-shadow: 0 0 5px #00eaff;
-            display: flex;
-            gap: 40px;
-            justify-content: center;
-        }
-
-        .score {
-            font-size: 1.5rem;
-            font-weight: bold;
-            background: #000000aa;
-            padding: 5px 15px;
-            border-radius: 30px;
-        }
-
-        .game-over-msg {
-            font-size: 1.5rem;
-            color: #ff6666;
-            text-shadow: 0 0 10px red;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.7; transform: scale(1);}
-            100% { opacity: 1; transform: scale(1.05);}
-        }
-
-        .cards-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            max-width: 1200px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-
-        .card {
-            background: rgba(17, 17, 34, 0.85);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(138, 43, 226, 0.5);
-            border-radius: 32px;
-            padding: 35px 25px;
-            width: 320px;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            border-color: #00eaff;
-            box-shadow: 0 20px 35px rgba(0, 234, 255, 0.2);
-        }
-
-        .card h2 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #e0e0ff, #aa88ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .card p {
-            font-size: 1.15rem;
-            line-height: 1.5;
-            color: #cfcfcf;
-        }
-
-        footer {
-            margin-top: 60px;
-            padding: 30px 20px;
-            background: #05000c;
-            border-top: 1px solid #2a1a4a;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        .social-links a {
-            color: #bb99ff;
-            text-decoration: none;
-            margin: 0 12px;
-            transition: 0.2s;
-        }
-
-        .social-links a:hover {
-            color: #00eaff;
-        }
-
-        .left-bottom-card {
-            position: fixed;
+        #controls {
+            position: absolute;
             bottom: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(12px);
-            border-left: 4px solid #00eaff;
-            border-radius: 16px;
-            padding: 15px 20px;
-            width: 220px;
-            text-align: left;
-            z-index: 999;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            transition: 0.2s;
-        }
-
-        .left-bottom-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            color: #00eaff;
-        }
-
-        .left-bottom-card p {
-            font-size: 0.85rem;
-            margin: 5px 0;
+            background: rgba(0,0,0,0.7);
             color: #ddd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            pointer-events: none;
+            z-index: 10;
+            backdrop-filter: blur(4px);
         }
-
-        .left-bottom-card:hover {
-            transform: translateY(-3px);
-            border-left-width: 6px;
-            background: rgba(10, 0, 20, 0.9);
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 0 0 1px black;
         }
-
+        #instruction {
+            position: absolute;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: #ffaa44;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 15;
+            white-space: nowrap;
+            font-size: 18px;
+            transition: opacity 1s;
+            border: 1px solid #ffaa44;
+            font-family: monospace;
+        }
         @media (max-width: 600px) {
-            .left-bottom-card {
-                width: 180px;
-                padding: 10px 15px;
-                bottom: 10px;
-                left: 10px;
-            }
-            #canvas3d { height: 300px; }
+            #info, #controls { font-size: 10px; padding: 6px 12px; }
+            #instruction { font-size: 14px; white-space: nowrap; bottom: 25%; }
         }
     </style>
 </head>
 <body>
-
-<nav class="navbar">
-    <div class="logo">⚡ GAMING ⚡</div>
-    <div class="nav-links">
-        <a href="#">🏠 Home</a>
-        <a href="#">🎮 Games</a>
-        <a href="#">📢 News</a>
+    <div id="info">
+        ⛏️ MINECRAFT STYLE WELT | First Person
     </div>
-</nav>
-
-<section class="hero">
-    <h1>3D RACING - VORSICHT BÄUME!</h1>
-    <p>Weiche den Bäumen aus, sonst ist das Spiel vorbei! 🎮🌲</p>
-    <button class="btn-game" id="startGameBtn">▶ START GAME (3D)</button>
-</section>
-
-<main>
-    <div class="cards-container">
-        <div class="card">
-            <h2>🎯 Über Mich</h2>
-            <p>Hi! Ich bin ein leidenschaftlicher Gamer.<br>
-            Ich liebe Gaming, Coding und coole Projekte 🔥</p>
-        </div>
-        <div class="card">
-            <h2>📀 Empfohlene Games</h2>
-            <p>⭐ Brawl Stars • Roblox ⭐<br>
-            Mehr Games folgen bald...</p>
-        </div>
+    <div id="controls">
+        🖱️ Maus zum schauen | WASD zum bewegen | 🔒 Klick ins Spiel für Maus-Sperre
+    </div>
+    <div id="crosshair"></div>
+    <div id="instruction">
+        🖱️ KLICKEN SIE AUF DIE WELT, UM ZU STARTEN 🎮
     </div>
 
-    <div id="gameContainer">
-        <canvas id="canvas3d"></canvas>
-        <div class="game-info">
-            <span>🚗 Steuere mit ← →</span>
-            <span class="score" id="scoreDisplay">Score: 0</span>
-        </div>
-        <div id="gameOverMsg" class="game-over-msg" style="display: none;">💥 GAME OVER! 💥</div>
-        <button class="btn-game" id="restartGameBtn" style="display: none;">🔄 Neustart</button>
-        <button class="btn-game btn-stop" id="stopGameBtn">⏹️ Spiel beenden</button>
-    </div>
-</main>
-
-<footer>
-    <p>© 2025 GAMING – Level up your life!</p>
-    <div class="social-links">
-        <a href="#">🐦 Twitter</a>
-        <a href="#">📺 Twitch</a>
-        <a href="#">💬 Discord</a>
-        <a href="#">🎬 YouTube</a>
-    </div>
-</footer>
-
-<div class="left-bottom-card">
-    <h3>📌 Info / Kontakt</h3>
-    <p>Hier kannst du später deinen Discord, Twitch oder News eintragen.</p>
-    <p style="font-size:0.75rem; margin-top:6px;">⚡ Deine Gaming-Zone</p>
-</div>
-
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+    <!-- Importiere Three.js Kernbibliothek und zusätzliche Helfer -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
         }
-    }
-</script>
+    </script>
 
-<script type="module">
-    import * as THREE from 'three';
+    <script type="module">
+        import * as THREE from 'three';
 
-    // DOM Elemente
-    const gameContainer = document.getElementById('gameContainer');
-    const startBtn = document.getElementById('startGameBtn');
-    const stopBtn = document.getElementById('stopGameBtn');
-    const restartBtn = document.getElementById('restartGameBtn');
-    const gameOverMsgDiv = document.getElementById('gameOverMsg');
-    const scoreSpan = document.getElementById('scoreDisplay');
-    const canvas = document.getElementById('canvas3d');
+        // --- Setup der Szene ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Himmelblau
+        scene.fog = new THREE.Fog(0x87CEEB, 40, 80);  // leichter Nebel für Tiefe
 
-    // Globale Variablen
-    let scene, camera, renderer;
-    let car;
-    let obstacles = [];      // Array von { mesh, collisionRadius, zPosition }
-    let roadSegments = [];
-    let isGameRunning = false;
-    let gameOverFlag = false;
-    let score = 0;
-    let baseSpeed = 0.22;    // Grundgeschwindigkeit (wird später erhöht)
-    let currentSpeed = baseSpeed;
-    let difficultyIncrease = 0.0005; // pro Frame
-    let animationId = null;
-    
-    // Bewegung
-    let leftPressed = false, rightPressed = false;
-    let carX = 0;
-    const minX = -2.8;
-    const maxX = 2.8;
-    
-    // Weltparameter
-    const roadLength = 30;
-    const obstacleSpawnDistance = 25;  // Abstand zwischen Hindernissen
-    let nextObstacleZ = -15;           // erstes Hindernis weiter vorne
-    
-    // Hilfsfunktionen
-    function init3D() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a2a2a);
-        scene.fog = new THREE.FogExp2(0x0a2a2a, 0.008);
+        // --- Kamera (First Person) ---
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 0); // Standard Augenhöhe
         
-        camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 200);
-        camera.position.set(0, 5, 12);
-        camera.lookAt(0, 0, 0);
-        
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-        renderer.shadowMap.enabled = true;
-        
-        // Licht
-        const ambient = new THREE.AmbientLight(0x404060);
-        scene.add(ambient);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(5, 12, 8);
-        dirLight.castShadow = true;
-        dirLight.receiveShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
-        scene.add(dirLight);
-        const fillLight = new THREE.PointLight(0x4466cc, 0.5);
-        fillLight.position.set(0, 4, -5);
+        // --- Renderer ---
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // Schatten aktivieren für besseren Look
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // --- Beleuchtung ---
+        // Umgebungslicht
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.65);
+        scene.add(ambientLight);
+        // Hauptlicht (Sonne) - mit Schatten
+        const directionalLight = new THREE.DirectionalLight(0xfff5d1, 1.2);
+        directionalLight.position.set(15, 20, 5);
+        directionalLight.castShadow = true;
+        directionalLight.receiveShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 50;
+        directionalLight.shadow.camera.left = -15;
+        directionalLight.shadow.camera.right = 15;
+        directionalLight.shadow.camera.top = 15;
+        directionalLight.shadow.camera.bottom = -15;
+        scene.add(directionalLight);
+        // Fülllicht von unten für Schattenaufhellung
+        const fillLight = new THREE.PointLight(0x5577aa, 0.3);
+        fillLight.position.set(0, -5, 0);
         scene.add(fillLight);
         
-        // Boden (Gras)
-        const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(40, 200),
-            new THREE.MeshStandardMaterial({ color: 0x2a5a2a, roughness: 0.9 })
-        );
-        ground.rotation.x = -Math.PI/2;
-        ground.position.y = -0.2;
-        ground.receiveShadow = true;
-        scene.add(ground);
+        // Kleines Hintergrundlicht
+        const backLight = new THREE.PointLight(0xffaa66, 0.2);
+        backLight.position.set(-5, 10, -8);
+        scene.add(backLight);
+
+        // --- Welten-Generierung: Blöcke speichern für Kollision & Darstellung ---
+        const blocks = []; // jedes Element = { mesh, x, y, z, width, height, depth }
+        const blockSize = 1;
         
-        // --- Auto erstellen (verbessert) ---
-        car = new THREE.Group();
-        const bodyGeo = new THREE.BoxGeometry(1.0, 0.4, 2.0);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe34234, metalness: 0.7, roughness: 0.3 });
-        const body = new THREE.Mesh(bodyGeo, bodyMat);
-        body.castShadow = true;
-        body.receiveShadow = true;
-        body.position.y = 0.2;
-        car.add(body);
-        
-        const roofGeo = new THREE.BoxGeometry(0.8, 0.3, 1.2);
-        const roofMat = new THREE.MeshStandardMaterial({ color: 0xcc5533 });
-        const roof = new THREE.Mesh(roofGeo, roofMat);
-        roof.position.y = 0.55;
-        roof.castShadow = true;
-        car.add(roof);
-        
-        const windowMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, emissive: 0x224466 });
-        const frontWind = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.1), windowMat);
-        frontWind.position.set(0, 0.5, 0.85);
-        car.add(frontWind);
-        
-        const rearWind = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.1), windowMat);
-        rearWind.position.set(0, 0.5, -0.85);
-        car.add(rearWind);
-        
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.3 });
-        const wheelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.3, 16);
-        const wheelPos = [[-0.7, 0.12, 0.85], [0.7, 0.12, 0.85], [-0.7, 0.12, -0.85], [0.7, 0.12, -0.85]];
-        wheelPos.forEach(pos => {
-            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-            wheel.rotation.z = Math.PI/2;
-            wheel.position.set(pos[0], pos[1], pos[2]);
-            wheel.castShadow = true;
-            car.add(wheel);
-        });
-        car.position.y = 0.1;
-        car.castShadow = true;
-        scene.add(car);
-        
-        // --- Straßen-Segmente (endlos)---
-        function createRoadSegment(zPos) {
-            const group = new THREE.Group();
-            const roadMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.6 });
-            const roadPlane = new THREE.Mesh(new THREE.PlaneGeometry(6, roadLength), roadMat);
-            roadPlane.rotation.x = -Math.PI/2;
-            roadPlane.position.y = -0.05;
-            roadPlane.receiveShadow = true;
-            group.add(roadPlane);
-            
-            // Mittelstreifen (durchgezogene Linie in der Mitte)
-            const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffcc44 });
-            for (let i = -roadLength/2 + 1; i < roadLength/2; i+= 1.8) {
-                const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.6), stripeMat);
-                stripe.position.set(0, 0.02, i);
-                stripe.castShadow = false;
-                group.add(stripe);
+        // Hilfsfunktion: Block erstellen und zur Szene hinzufügen
+        function addBlock(x, y, z, color, materialType = 'standard') {
+            // Material je nach Blocktyp mit leichter Variation für Minecraft-Feeling
+            let material;
+            if (materialType === 'grass') {
+                // Grasblock: oben grün, seiten braun-grün, unten braun (Vereinfacht: ein Material mit Farbe)
+                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.7, metalness: 0.05 });
+            } else if (materialType === 'wood') {
+                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.9, metalness: 0.02 });
+            } else if (materialType === 'leaf') {
+                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, metalness: 0.03, emissive: 0x112200 });
+            } else {
+                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 });
             }
-            // Seitenstreifen weiß
-            const edgeMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
-            const leftEdge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, roadLength), edgeMat);
-            leftEdge.position.set(-2.95, 0.02, 0);
-            group.add(leftEdge);
-            const rightEdge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, roadLength), edgeMat);
-            rightEdge.position.set(2.95, 0.02, 0);
-            group.add(rightEdge);
             
-            group.position.z = zPos;
-            return group;
+            const geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(x, y, z);
+            cube.castShadow = true;
+            cube.receiveShadow = true;
+            scene.add(cube);
+            
+            blocks.push({
+                mesh: cube,
+                x: x, y: y, z: z,
+                minX: x - 0.5, maxX: x + 0.5,
+                minY: y - 0.5, maxY: y + 0.5,
+                minZ: z - 0.5, maxZ: z + 0.5
+            });
         }
         
-        for (let i = -2; i <= 2; i++) {
-            const seg = createRoadSegment(i * roadLength);
-            scene.add(seg);
-            roadSegments.push(seg);
-        }
+        // --- Welt generieren: Boden und Bäume, ein paar Blumen / Sträucher ---
         
-        // Kamera-Follow-Funktion
-        function updateCamera() {
-            camera.position.x += (car.position.x - camera.position.x) * 0.1;
-            camera.lookAt(car.position.x, 0.5, 0);
-        }
-        return { updateCamera };
-    }
-    
-    // Baum erstellen (Hindernis)
-    function createTree(x, z) {
-        const group = new THREE.Group();
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, roughness: 0.8 });
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 1.0, 6), trunkMat);
-        trunk.position.y = 0.5;
-        trunk.castShadow = true;
-        group.add(trunk);
-        
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x3c9e3c });
-        const foliage1 = new THREE.Mesh(new THREE.ConeGeometry(0.6, 0.8, 8), leafMat);
-        foliage1.position.y = 1.0;
-        foliage1.castShadow = true;
-        group.add(foliage1);
-        const foliage2 = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.7, 8), leafMat);
-        foliage2.position.y = 1.5;
-        foliage2.castShadow = true;
-        group.add(foliage2);
-        
-        group.position.set(x, 0, z);
-        return group;
-    }
-    
-    // Hindernis spawnen
-    function spawnObstacle(zPos) {
-        // Zufällige X-Position auf der Straße (zwischen -2.5 und 2.5)
-        const xPos = (Math.random() - 0.5) * 5.0;
-        // Begrenzung auf Fahrbahn (nicht zu nah am Rand)
-        const clampedX = Math.min(maxX - 0.5, Math.max(minX + 0.5, xPos));
-        const tree = createTree(clampedX, zPos);
-        scene.add(tree);
-        obstacles.push({
-            mesh: tree,
-            collisionRadius: 0.7,
-            x: clampedX,
-            z: zPos
-        });
-    }
-    
-    // Hindernisse aktualisieren (bewegen sich nach hinten)
-    function updateObstacles(speed) {
-        for (let i = 0; i < obstacles.length; i++) {
-            const obs = obstacles[i];
-            obs.z -= speed;
-            obs.mesh.position.z = obs.z;
-        }
-        // Hindernisse entfernen, die hinter dem Spieler sind (z < -10)
-        obstacles = obstacles.filter(obs => {
-            if (obs.z < -12) {
-                scene.remove(obs.mesh);
-                return false;
+        // 1. Grasboden (20x20 Bereich) auf Y = 0
+        const groundSize = 24;
+        const half = groundSize / 2;
+        for (let i = -half; i < half; i++) {
+            for (let j = -half; j < half; j++) {
+                // leichte Höhenvariation? Für einfache Welt bleibt flach, aber etwas Moos/Erde?
+                let blockColor = 0x6b8e23; // Grasgrün
+                // zufällig vereinzelte Erde / Gras-Patches für Abwechslung
+                if (Math.random() < 0.05) blockColor = 0x8B5A2B; // Erde
+                addBlock(i, 0, j, blockColor, 'grass');
             }
+        }
+        
+        // 2. Zufällige Bäume (ca. 45 Stück)
+        function isTreePositionFree(tx, tz, existingTrees) {
+            // Mindestabstand zwischen Bäumen 3 Blöcke
+            for (let t of existingTrees) {
+                if (Math.abs(t.x - tx) < 2.5 && Math.abs(t.z - tz) < 2.5) return false;
+            }
+            // nicht zu nah am Rand
+            if (Math.abs(tx) > half - 3 || Math.abs(tz) > half - 3) return false;
             return true;
-        });
-    }
-    
-    // Neue Hindernisse generieren
-    function manageObstacleSpawning() {
-        if (!isGameRunning) return;
-        // Finde das am weitesten vorne liegende Hindernis
-        let maxZ = -30;
-        for (let obs of obstacles) {
-            if (obs.z > maxZ) maxZ = obs.z;
         }
-        while (maxZ < 20) {  // in einem Bereich vor dem Spieler
-            const newZ = maxZ + obstacleSpawnDistance;
-            spawnObstacle(newZ);
-            maxZ = newZ;
-        }
-    }
-    
-    // Kollisionserkennung
-    function checkCollisions() {
-        const carRadius = 0.6;
-        for (let obs of obstacles) {
-            const dx = car.position.x - obs.x;
-            const dz = 0 - obs.z;  // car position z ist immer 0 (fest)
-            const dist = Math.hypot(dx, dz);
-            if (dist < carRadius + obs.collisionRadius) {
-                gameOver();
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    // Spiel vorbei
-    function gameOver() {
-        if (!isGameRunning) return;
-        isGameRunning = false;
-        gameOverFlag = true;
-        gameOverMsgDiv.style.display = 'block';
-        restartBtn.style.display = 'inline-block';
-        if (animationId) cancelAnimationFrame(animationId);
-        animationId = null;
-    }
-    
-    // Neustart
-    function restartGame() {
-        // Alle Hindernisse entfernen
-        for (let obs of obstacles) {
-            scene.remove(obs.mesh);
-        }
-        obstacles = [];
-        score = 0;
-        scoreSpan.innerText = `Score: 0`;
-        currentSpeed = baseSpeed;
-        carX = 0;
-        car.position.x = 0;
-        gameOverFlag = false;
-        gameOverMsgDiv.style.display = 'none';
-        restartBtn.style.display = 'none';
-        // Straßensegmente zurücksetzen
-        for (let i = 0; i < roadSegments.length; i++) {
-            roadSegments[i].position.z = (i - 2) * roadLength;
-        }
-        // Hindernisse neu spawnen
-        nextObstacleZ = -15;
-        for (let i = 0; i < 4; i++) {
-            spawnObstacle(-10 + i * obstacleSpawnDistance);
-        }
-        isGameRunning = true;
-        gameLoop();
-    }
-    
-    // Straßen-Update (endlos scrollen)
-    function updateRoad(speed) {
-        for (let seg of roadSegments) {
-            seg.position.z -= speed;
-        }
-        for (let i = 0; i < roadSegments.length; i++) {
-            if (roadSegments[i].position.z < -roadLength) {
-                roadSegments[i].position.z += roadLength * roadSegments.length;
-            }
-        }
-    }
-    
-    // Punktestand (basierend auf zurückgelegter Strecke)
-    let lastScoreUpdate = 0;
-    function updateScore(speed) {
-        if (!isGameRunning) return;
-        score += speed * 2;
-        scoreSpan.innerText = `Score: ${Math.floor(score)}`;
-        // Schwierigkeit erhöhen alle 200 Punkte
-        if (Math.floor(score) > lastScoreUpdate + 200) {
-            lastScoreUpdate = Math.floor(score);
-            currentSpeed = Math.min(0.55, currentSpeed + 0.02);
-        }
-    }
-    
-    // Bewegungssteuerung
-    function handleKeyDown(e) {
-        if (!isGameRunning || gameOverFlag) return;
-        if (e.key === 'ArrowLeft') {
-            leftPressed = true;
-            e.preventDefault();
-        } else if (e.key === 'ArrowRight') {
-            rightPressed = true;
-            e.preventDefault();
-        }
-    }
-    function handleKeyUp(e) {
-        if (e.key === 'ArrowLeft') leftPressed = false;
-        else if (e.key === 'ArrowRight') rightPressed = false;
-    }
-    
-    function updateCar() {
-        if (!isGameRunning || gameOverFlag) return;
-        let move = 0;
-        if (leftPressed) move = -0.18;
-        if (rightPressed) move = 0.18;
-        carX += move;
-        carX = Math.min(maxX, Math.max(minX, carX));
-        car.position.x = carX;
-    }
-    
-    // Hauptloop
-    let cameraHelper;
-    function gameLoop() {
-        if (!isGameRunning) return;
-        updateCar();
-        const speed = currentSpeed;
-        updateRoad(speed);
-        updateObstacles(speed);
-        manageObstacleSpawning();
-        updateScore(speed);
-        if (checkCollisions()) {
-            // Spiel wurde durch gameOver() beendet
-            return;
-        }
-        if (cameraHelper) cameraHelper.updateCamera();
-        renderer.render(scene, camera);
-        animationId = requestAnimationFrame(gameLoop);
-    }
-    
-    // Spiel starten (initial)
-    let threeInit = false;
-    function startGame() {
-        if (isGameRunning) return;
-        gameContainer.style.display = "flex";
-        if (!threeInit) {
-            const initRes = init3D();
-            cameraHelper = initRes;
-            threeInit = true;
-            window.addEventListener('keydown', handleKeyDown);
-            window.addEventListener('keyup', handleKeyUp);
-            // Erste Hindernisse
-            for (let i = 0; i < 5; i++) {
-                spawnObstacle(-10 + i * obstacleSpawnDistance);
-            }
-        } else {
-            // Reset wenn schon initialisiert
-            restartGame();
-            return;
-        }
-        isGameRunning = true;
-        gameOverFlag = false;
-        score = 0;
-        currentSpeed = baseSpeed;
-        scoreSpan.innerText = "Score: 0";
-        gameOverMsgDiv.style.display = 'none';
-        restartBtn.style.display = 'none';
-        gameLoop();
         
-        // Größenanpassung
-        function handleResize() {
-            const w = canvas.clientWidth;
-            const h = canvas.clientHeight;
-            renderer.setSize(w, h);
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
+        const treePositions = [];
+        const treeCount = 52;
+        for (let t = 0; t < treeCount; t++) {
+            let attempts = 0;
+            let placed = false;
+            while (!placed && attempts < 30) {
+                const randX = Math.floor(Math.random() * (groundSize - 6)) - (half - 3);
+                const randZ = Math.floor(Math.random() * (groundSize - 6)) - (half - 3);
+                if (isTreePositionFree(randX, randZ, treePositions)) {
+                    treePositions.push({ x: randX, z: randZ });
+                    placed = true;
+                    // Baum bauen
+                    const woodColor = 0x8B5A2B;
+                    const leafColor = 0x2e8b57;
+                    // Stamm (3 Blöcke hoch)
+                    addBlock(randX, 1, randZ, woodColor, 'wood');
+                    addBlock(randX, 2, randZ, woodColor, 'wood');
+                    addBlock(randX, 3, randZ, woodColor, 'wood');
+                    // Laubkrone: einfache Kugelform / Würfel
+                    // Ebene 4 (über Stamm)
+                    addBlock(randX, 4, randZ, leafColor, 'leaf');
+                    addBlock(randX + 1, 4, randZ, leafColor, 'leaf');
+                    addBlock(randX - 1, 4, randZ, leafColor, 'leaf');
+                    addBlock(randX, 4, randZ + 1, leafColor, 'leaf');
+                    addBlock(randX, 4, randZ - 1, leafColor, 'leaf');
+                    // Ebene 5 (Spitze)
+                    addBlock(randX, 5, randZ, leafColor, 'leaf');
+                    addBlock(randX + 1, 5, randZ, leafColor, 'leaf');
+                    addBlock(randX - 1, 5, randZ, leafColor, 'leaf');
+                    addBlock(randX, 5, randZ + 1, leafColor, 'leaf');
+                    addBlock(randX, 5, randZ - 1, leafColor, 'leaf');
+                    // zusätzliche Laubblöcke an den Seiten für mehr Volumen
+                    addBlock(randX + 1, 4, randZ + 1, leafColor, 'leaf');
+                    addBlock(randX - 1, 4, randZ - 1, leafColor, 'leaf');
+                    addBlock(randX + 1, 4, randZ - 1, leafColor, 'leaf');
+                    addBlock(randX - 1, 4, randZ + 1, leafColor, 'leaf');
+                }
+                attempts++;
+            }
         }
-        window.addEventListener('resize', handleResize);
-        handleResize();
-    }
-    
-    function stopGame() {
-        if (animationId) cancelAnimationFrame(animationId);
-        isGameRunning = false;
-        gameContainer.style.display = "none";
-    }
-    
-    startBtn.addEventListener('click', startGame);
-    stopBtn.addEventListener('click', stopGame);
-    restartBtn.addEventListener('click', () => restartGame());
-    
-    gameContainer.style.display = "none";
-    console.log("✅ Großes 3D-Rennen mit Bäumen – weiche aus oder verliere!");
-</script>
+        
+        // 3. Ein paar einzelne Blumen / kleine Büsche (bunte Blöcke als Dekoration)
+        const flowerColors = [0xFF69B4, 0xFFD700, 0xCD5C5C, 0x9370DB];
+        for (let i = 0; i < 180; i++) {
+            const fx = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
+            const fz = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
+            // checken ob auf Gras und nicht von Baum besetzt
+            let occupied = false;
+            for (let b of blocks) {
+                if (b.x === fx && b.z === fz && b.y === 1) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (!occupied && Math.abs(fx) < half-1 && Math.abs(fz) < half-1) {
+                const color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+                addBlock(fx, 1, fz, color, 'grass'); // kleine Blume
+            }
+        }
+        
+        // 4. Zusätzliche Steine / Kiesel (graue Blöcke verstreut)
+        for (let i = 0; i < 80; i++) {
+            const sx = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
+            const sz = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
+            let occupiedStone = false;
+            for (let b of blocks) {
+                if (b.x === sx && b.z === sz && b.y === 1) {
+                    occupiedStone = true;
+                    break;
+                }
+            }
+            if (!occupiedStone && Math.abs(sx) < half-1 && Math.abs(sz) < half-1) {
+                addBlock(sx, 1, sz, 0x888888, 'grass');
+            }
+        }
+        
+        // 5. Ein kleiner See? Nicht nötig, aber erhöht Atmosphäre: ein paar Wasserblöcke (dekorativ)
+        // Füge ein kleines Wasserbecken hinzu an einer Stelle
+        const pondX = 5, pondZ = -4;
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dz = -2; dz <= 2; dz++) {
+                if (Math.abs(dx) <= 1.5 && Math.abs(dz) <= 1.5 && (dx !== 0 || dz !== 0)) {
+                    // Entferne ggf. vorhandenen Grasblock und setze Wasser (nur optisch, keine Physik)
+                    // Check ob Position im Bodenbereich ist
+                    const worldX = pondX + dx;
+                    const worldZ = pondZ + dz;
+                    // Vorhandenen Block löschen? Einfach Wasser drüber? Nein, wir ersetzen den Grasblock auf y=1 und y=0?
+                    // besser: Wasserblock auf Y=1 setzen (über dem Boden)
+                    let found = false;
+                    for (let j = 0; j < blocks.length; j++) {
+                        if (blocks[j].x === worldX && blocks[j].z === worldZ && blocks[j].y === 1) {
+                            // Entferne alten Block von Szene
+                            scene.remove(blocks[j].mesh);
+                            blocks.splice(j,1);
+                            found = true;
+                            break;
+                        }
+                    }
+                    // Wasserblock hinzufügen (blau-transparent)
+                    const waterMat = new THREE.MeshStandardMaterial({ color: 0x3b9eff, roughness: 0.3, metalness: 0.8, emissive: 0x004466 });
+                    const waterGeom = new THREE.BoxGeometry(blockSize, 0.8, blockSize);
+                    const waterBlock = new THREE.Mesh(waterGeom, waterMat);
+                    waterBlock.position.set(worldX, 1.0, worldZ);
+                    waterBlock.castShadow = true;
+                    waterBlock.receiveShadow = false;
+                    scene.add(waterBlock);
+                    blocks.push({
+                        mesh: waterBlock,
+                        x: worldX, y: 1, z: worldZ,
+                        minX: worldX - 0.5, maxX: worldX + 0.5,
+                        minY: 0.6, maxY: 1.4,
+                        minZ: worldZ - 0.5, maxZ: worldZ + 0.5
+                    });
+                }
+            }
+        }
+        
+        // Kleine Brücke / Stege über den See? Nicht nötig aber ein paar Holzplanken
+        for (let step = -2; step <= 2; step++) {
+            if (step !== 0) {
+                addBlock(pondX + step, 1, pondZ - 2, 0xBC9A6C, 'wood');
+                addBlock(pondX + step, 1, pondZ + 2, 0xBC9A6C, 'wood');
+            }
+        }
+        
+        // --- Spieler-Physik & Bewegung (First Person) ---
+        // Spielerparameter
+        let playerVelocity = { x: 0, z: 0 };
+        const playerHeight = 1.6;   // Augenhöhe
+        const playerRadius = 0.35;   // Kollisionsradius
+        const playerStepHeight = 0.5; // Tritthöhe (optional)
+        
+        // Bewegungseingaben
+        const keyState = {
+            KeyW: false, KeyS: false, KeyA: false, KeyD: false
+        };
+        
+        let moveSpeed = 5.8; // Einheiten pro Sekunde
+        
+        // Maussteuerung (Yaw/Pitch)
+        let mouseX = 0, mouseY = 0;
+        let yaw = -Math.PI / 4;   // horizontaler Winkel
+        let pitch = 0;             // vertikaler Winkel
+        let mouseLocked = false;
+        
+        // Kamerarichtung Vektoren
+        const forward = new THREE.Vector3();
+        const right = new THREE.Vector3();
+        
+        // Hilfsfunktion: Kollisionsprüfung zwischen Spieler-Bounding-Box (Zylinder/Kapsel vereinfacht als Box)
+        function playerCollidesWithBlocks(newX, newZ, newY) {
+            // Spieler-Bounding-Box: Größe ca. 0.7 Breite, 1.8 Höhe
+            const playerMinX = newX - playerRadius;
+            const playerMaxX = newX + playerRadius;
+            const playerMinY = newY - 0.9;  // Fuß bei Höhe -0.9 relativ zu Auge
+            const playerMaxY = newY + 0.9;  // Kopfhöhe
+            const playerMinZ = newZ - playerRadius;
+            const playerMaxZ = newZ + playerRadius;
+            
+            for (let block of blocks) {
+                // Schnelltest: überschneiden sich die AABB?
+                if (playerMaxX > block.minX && playerMinX < block.maxX &&
+                    playerMaxY > block.minY && playerMinY < block.maxY &&
+                    playerMaxZ > block.minZ && playerMinZ < block.maxZ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Bewegung mit Kollision (separate Achsen)
+        function tryMove(deltaX, deltaZ, currentPos) {
+            let newX = currentPos.x;
+            let newZ = currentPos.z;
+            // X-Bewegung testen
+            if (deltaX !== 0) {
+                newX = currentPos.x + deltaX;
+                if (!playerCollidesWithBlocks(newX, currentPos.z, currentPos.y)) {
+                    currentPos.x = newX;
+                }
+            }
+            // Z-Bewegung testen
+            if (deltaZ !== 0) {
+                newZ = currentPos.z + deltaZ;
+                if (!playerCollidesWithBlocks(currentPos.x, newZ, currentPos.y)) {
+                    currentPos.z = newZ;
+                }
+            }
+            return currentPos;
+        }
+        
+        // Event Listener für Tastatur
+        window.addEventListener('keydown', (e) => {
+            if (keyState.hasOwnProperty(e.code)) {
+                keyState[e.code] = true;
+                e.preventDefault();
+            }
+            // Optional: Escape zum Entsperren der Maus
+            if (e.code === 'Escape' && mouseLocked) {
+                document.exitPointerLock();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (keyState.hasOwnProperty(e.code)) {
+                keyState[e.code] = false;
+                e.preventDefault();
+            }
+        });
+        
+        // Maussteuerung mit Pointer Lock API
+        const canvasElement = renderer.domElement;
+        canvasElement.addEventListener('click', () => {
+            canvasElement.requestPointerLock();
+        });
+        
+        document.addEventListener('pointerlockchange', lockChange);
+        document.addEventListener('mozpointerlockchange', lockChange);
+        
+        function lockChange() {
+            if (document.pointerLockElement === canvasElement) {
+                mouseLocked = true;
+                // Instruction ausblenden
+                const instrDiv = document.getElementById('instruction');
+                instrDiv.style.opacity = '0';
+                setTimeout(() => instrDiv.style.display = 'none', 1000);
+                // Mausbewegung registrieren
+                document.addEventListener('mousemove', onMouseMove);
+            } else {
+                mouseLocked = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                const instrDiv = document.getElementById('instruction');
+                instrDiv.style.display = 'block';
+                instrDiv.style.opacity = '1';
+                instrDiv.innerText = '🔓 Maus entsperrt. Klicken zum Fortfahren 🔓';
+            }
+        }
+        
+        function onMouseMove(e) {
+            if (!mouseLocked) return;
+            const sensitivity = 0.002;
+            yaw -= e.movementX * sensitivity;
+            pitch -= e.movementY * sensitivity;
+            // Pitch begrenzen (nicht über Kopf / unter Boden)
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+        }
+        
+        // Uhr für Delta-Zeit
+        const clock = new THREE.Clock();
+        
+        // Startposition Spieler (über Grund)
+        let playerPos = new THREE.Vector3(0, playerHeight, 0);
+        // Stelle sicher, dass Startposition frei von Blöcken ist
+        if (playerCollidesWithBlocks(playerPos.x, playerPos.z, playerPos.y)) {
+            playerPos.set(0, playerHeight, 0);
+            // Falls immer noch Kollision, nach oben setzen
+            while (playerCollidesWithBlocks(playerPos.x, playerPos.z, playerPos.y) && playerPos.y < 5) playerPos.y += 0.5;
+        }
+        camera.position.copy(playerPos);
+        
+        // --- Animations- und Bewegungsschleife ---
+        function updateMovement(deltaTime) {
+            if (!mouseLocked) return;
+            
+            // Berechne Blickrichtungsvektoren aus Yaw/Pitch
+            const cosYaw = Math.cos(yaw);
+            const sinYaw = Math.sin(yaw);
+            const cosPitch = Math.cos(pitch);
+            const sinPitch = Math.sin(pitch);
+            
+            // Forward Vektor (in der XZ-Ebene, für horizontale Bewegung)
+            forward.set(sinYaw, 0, cosYaw).normalize();
+            right.set(cosYaw, 0, -sinYaw).normalize();
+            
+            let moveDelta = new THREE.Vector3(0, 0, 0);
+            let speed = moveSpeed * deltaTime;
+            
+            if (keyState.KeyW) moveDelta.add(forward);
+            if (keyState.KeyS) moveDelta.sub(forward);
+            if (keyState.KeyD) moveDelta.add(right);
+            if (keyState.KeyA) moveDelta.sub(right);
+            
+            // Normieren bei diagonaler Bewegung
+            if (moveDelta.length() > 0) moveDelta.normalize();
+            moveDelta.multiplyScalar(speed);
+            
+            // Bewegung mit Kollision ausführen
+            let newPos = playerPos.clone();
+            newPos = tryMove(moveDelta.x, moveDelta.z, newPos);
+            
+            // Bodenhaftung: Spieler sollte immer auf y = 1.6 bleiben, aber wenn er unter einen Block gerät? 
+            // Wir prüfen, ob unter den Füßen ein Block ist, sonst setze auf Boden? Aber hier ist alles flach plus Bäume.
+            // Falls wir in einen Block reinfallen (Y-Kollision verhindert Höhenänderung), ignorieren wir Y.
+            // Zusätzlich: Wenn Spieler über einem Block läuft, kein Problem. Für simple First-Person keine Gravitation nötig.
+            // Stelle sicher, dass Spieler nicht durch Blöcke am Boden sinkt.
+            const footCheckY = newPos.y - 0.9;
+            let grounded = false;
+            for (let block of blocks) {
+                if (Math.abs(newPos.x - block.x) < 0.8 && Math.abs(newPos.z - block.z) < 0.8) {
+                    if (footCheckY >= block.minY - 0.1 && footCheckY <= block.maxY + 0.2 && block.minY < newPos.y) {
+                        grounded = true;
+                        break;
+                    }
+                }
+            }
+            if (!grounded && newPos.y > 1.6) {
+                // leichte "Schwerkraft" falls über Abgrund? In unserer Welt gibt es keine Löcher, aber sicherheitshalber
+                newPos.y -= deltaTime * 2;
+                if (newPos.y < playerHeight) newPos.y = playerHeight;
+            } else if (!grounded && newPos.y < playerHeight) {
+                newPos.y = playerHeight;
+            }
+            
+            // final Kollision für Y (gegen Decke/Kopf)
+            if (playerCollidesWithBlocks(newPos.x, newPos.z, newPos.y + 0.2)) {
+                // Kopfstößt an
+                newPos.y = playerPos.y;
+            }
+            if (playerCollidesWithBlocks(newPos.x, newPos.z, newPos.y - 0.9)) {
+                // Füße stecken im Boden? Korrigiere nach oben
+                newPos.y = playerPos.y + 0.1;
+            }
+            
+            playerPos.copy(newPos);
+            camera.position.copy(playerPos);
+            
+            // Kamera Rotation anwenden (Euler)
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+        }
+        
+        // Einfache Wolken- oder Partikel? nicht nötig aber für Atmosphäre einige fliegende Partikel (optional)
+        // Erstelle ein paar Schmetterlings-Effekte (kleine Punkte) - dekorativ
+        const particleCount = 300;
+        const particleGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            particlePositions[i*3] = (Math.random() - 0.5) * 80;
+            particlePositions[i*3+1] = Math.random() * 8 + 1;
+            particlePositions[i*3+2] = (Math.random() - 0.5) * 70;
+        }
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMaterial = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08, transparent: true, opacity: 0.5 });
+        const particles = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particles);
+        
+        // Zusätzlich: einfache Gras-Pflanzen (kleine Stäbe) - nicht notwendig aber schöner
+        
+        // --- Animation Loop ---
+        let lastTime = performance.now();
+        
+        function animate() {
+            const now = performance.now();
+            let delta = Math.min(0.033, (now - lastTime) / 1000);
+            lastTime = now;
+            if (delta < 0.001) delta = 0.016;
+            
+            updateMovement(delta);
+            
+            // Partikel langsam bewegen für Atmosphäre
+            particles.rotation.y += 0.002;
+            particles.rotation.x = Math.sin(Date.now() * 0.0005) * 0.1;
+            
+            // Kleine dynamische Lichter (bisschen magisch)
+            const time = Date.now() * 0.002;
+            backLight.intensity = 0.25 + Math.sin(time) * 0.1;
+            
+            // Kamera aktualisieren und rendern
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        
+        // Event für Fenstergröße
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Start
+        animate();
+        
+        // kleine Console Info
+        console.log('Minecraft-style Welt geladen! WASD + Maus');
+    </script>
 </body>
 </html>
