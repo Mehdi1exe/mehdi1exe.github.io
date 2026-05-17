@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Minecraft Style - First Person | Große Welt, Inventar, Arm + Blockabbau</title>
+    <title>Minecraft Style - First Person | Inventar & Blockabbau</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Segoe UI', 'Minecraft', 'Courier New', monospace;
         }
-        /* Hotbar / Inventar */
+        /* Inventar / Hotbar */
         #hotbar {
             position: absolute;
             bottom: 30px;
@@ -18,7 +18,7 @@
             transform: translateX(-50%);
             display: flex;
             gap: 8px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.65);
             padding: 10px 20px;
             border-radius: 16px;
             backdrop-filter: blur(8px);
@@ -48,7 +48,9 @@
             background: rgba(70,70,90,0.9);
             box-shadow: 0 0 8px gold;
         }
-        .slot-icon { font-size: 32px; }
+        .slot-icon {
+            font-size: 32px;
+        }
         .slot-count {
             position: absolute;
             bottom: 4px;
@@ -58,7 +60,10 @@
             padding: 2px 5px;
             border-radius: 10px;
         }
-        .slot-name { font-size: 10px; margin-top: 2px; }
+        .slot-name {
+            font-size: 10px;
+            margin-top: 2px;
+        }
         #status {
             position: absolute;
             top: 20px;
@@ -105,10 +110,10 @@
 </head>
 <body>
     <div id="hotbar"></div>
-    <div id="status">✅ Große Welt geladen | 2 Blöcke groß | Klick zum Starten</div>
+    <div id="status">✅ Bereit | Klick zum Starten</div>
     <div id="crosshair"></div>
     <div id="controls-info">
-        🖱️ LINKS = Abbauen | RECHTS = Platzieren | 1-9 / Scrollen = Slot | ␣ Springen | W A S D
+        🖱️ LINKS = Abbauen | RECHTS = Platzieren | 1-9 / Scrollen = Slot wählen | ␣ Springen
     </div>
 
     <script type="importmap">
@@ -122,15 +127,16 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // --- Setup Szene ---
+        // --- Setup Szene, Kamera, Renderer ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87CEEB);
-        scene.fog = new THREE.Fog(0x87CEEB, 55, 110);
+        scene.fog = new THREE.Fog(0x87CEEB, 50, 95);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 120);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
         // --- Beleuchtung ---
@@ -143,11 +149,11 @@
         dirLight.shadow.mapSize.width = 1024;
         dirLight.shadow.mapSize.height = 1024;
         dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 65;
-        dirLight.shadow.camera.left = -18;
-        dirLight.shadow.camera.right = 18;
-        dirLight.shadow.camera.top = 18;
-        dirLight.shadow.camera.bottom = -18;
+        dirLight.shadow.camera.far = 55;
+        dirLight.shadow.camera.left = -15;
+        dirLight.shadow.camera.right = 15;
+        dirLight.shadow.camera.top = 15;
+        dirLight.shadow.camera.bottom = -15;
         scene.add(dirLight);
         const fillLight = new THREE.PointLight(0x5577aa, 0.3);
         fillLight.position.set(0, -5, 0);
@@ -156,7 +162,7 @@
         backLight.position.set(-5, 10, -8);
         scene.add(backLight);
 
-        // --- Block-Definitionen ---
+        // --- Blockdatenbank & Inventar ---
         const BLOCK_TYPES = [
             { id: 0, name: "Gras", color: 0x6b8e23, icon: "🌿", stackable: true },
             { id: 1, name: "Erde", color: 0x8B5A2B, icon: "🟫", stackable: true },
@@ -166,20 +172,23 @@
             { id: 5, name: "Sand", color: 0xEEDD99, icon: "🏜️", stackable: true }
         ];
         
-        // --- Inventar (9 Slots) ---
+        // Inventar: 9 Slots, jedes Slot hat { typeId, count }
         let inventory = Array(9).fill().map(() => ({ typeId: 0, count: 0 }));
+        // Startausrüstung: 64 Gras, 32 Erde, 32 Holz, 16 Stein
         inventory[0] = { typeId: 0, count: 64 };
         inventory[1] = { typeId: 1, count: 32 };
         inventory[2] = { typeId: 2, count: 32 };
         inventory[3] = { typeId: 4, count: 16 };
         inventory[4] = { typeId: 3, count: 16 };
+        // leere Slots bleiben
         
-        let selectedSlot = 0;
+        let selectedSlot = 0; // 0-8
         
-        // --- Welt-Blockverwaltung ---
+        // Weltblöcke: jedes Element { mesh, x, y, z, typeId, minX, maxX, ... }
         let blocks = [];
         const blockSize = 1;
         
+        // Hilfsfunktion: Block-Mesh erzeugen
         function createBlockMesh(x, y, z, typeId) {
             const blockDef = BLOCK_TYPES[typeId];
             const material = new THREE.MeshStandardMaterial({ color: blockDef.color, roughness: 0.7, metalness: 0.05 });
@@ -191,9 +200,13 @@
             return cube;
         }
         
+        // Block zur Welt hinzufügen (ohne Kollisionsprüfung, wird direkt gespeichert)
         function addBlockToWorld(x, y, z, typeId) {
-            if (y < 0 || y > 25) return false;
-            for (let b of blocks) if (b.x === x && b.y === y && b.z === z) return false;
+            if (y < 0 || y > 20) return false; // Höhenlimit
+            // Prüfen ob bereits ein Block existiert
+            for (let b of blocks) {
+                if (b.x === x && b.y === y && b.z === z) return false;
+            }
             const mesh = createBlockMesh(x, y, z, typeId);
             scene.add(mesh);
             blocks.push({
@@ -205,33 +218,32 @@
             return true;
         }
         
+        // Block entfernen (nach Position)
         function removeBlockAt(x, y, z) {
             for (let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
                 if (b.x === x && b.y === y && b.z === z) {
                     scene.remove(b.mesh);
-                    const type = b.typeId;
                     blocks.splice(i,1);
-                    return type;
+                    return b.typeId;
                 }
             }
             return null;
         }
         
-        function getBlockAt(x, y, z) {
-            return blocks.find(b => b.x === x && b.y === y && b.z === z);
-        }
-        
-        // Inventar-Helfer
+        // Inventar: Item hinzufügen (stacking)
         function addItemToInventory(typeId, amount) {
-            for (let i = 0; i < inventory.length && amount > 0; i++) {
+            // zuerst versuchen, in existierenden Stack zu legen
+            for (let i = 0; i < inventory.length; i++) {
                 if (inventory[i].typeId === typeId && inventory[i].count < 64) {
                     let space = 64 - inventory[i].count;
                     let add = Math.min(space, amount);
                     inventory[i].count += add;
                     amount -= add;
+                    if (amount === 0) break;
                 }
             }
+            // dann in leere Slots
             for (let i = 0; i < inventory.length && amount > 0; i++) {
                 if (inventory[i].count === 0) {
                     inventory[i].typeId = typeId;
@@ -241,28 +253,30 @@
                 }
             }
             updateHotbarUI();
-            updateHandModel();
         }
         
+        // Item aus Inventar entfernen (selected slot)
         function removeCurrentItem() {
             const slot = inventory[selectedSlot];
             if (slot.count > 0) {
                 slot.count--;
-                if (slot.count === 0) slot.typeId = 0;
+                if (slot.count === 0) {
+                    slot.typeId = 0;
+                }
                 updateHotbarUI();
-                updateHandModel();
                 return slot.typeId;
             }
             return null;
         }
         
+        // Aktuellen Blocktyp im selektierten Slot
         function getCurrentBlockType() {
             const slot = inventory[selectedSlot];
             if (slot.count > 0 && slot.typeId !== undefined) return slot.typeId;
             return null;
         }
         
-        // --- UI Hotbar ---
+        // --- UI: Hotbar rendern ---
         const hotbarDiv = document.getElementById('hotbar');
         function updateHotbarUI() {
             hotbarDiv.innerHTML = '';
@@ -279,174 +293,93 @@
                 div.addEventListener('click', () => {
                     selectedSlot = i;
                     updateHotbarUI();
-                    updateHandModel();
                 });
                 hotbarDiv.appendChild(div);
             }
         }
         
-        // --- HAND MODELL (sichtbarer Arm mit gehaltenem Block) ---
-        let handGroup = null;
-        function createHandModel() {
-            if (handGroup) scene.remove(handGroup);
-            handGroup = new THREE.Group();
-            // Arm (einfacher Zylinder / Quader)
-            const armGeo = new THREE.BoxGeometry(0.35, 0.7, 0.35);
-            const armMat = new THREE.MeshStandardMaterial({ color: 0xDDAA88, roughness: 0.4 });
-            const arm = new THREE.Mesh(armGeo, armMat);
-            arm.position.set(0.45, -0.5, -0.6);
-            arm.castShadow = true;
-            handGroup.add(arm);
-            
-            // Hand (kleinerer Würfel)
-            const handGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-            const handMat = new THREE.MeshStandardMaterial({ color: 0xCC9966 });
-            const handMesh = new THREE.Mesh(handGeo, handMat);
-            handMesh.position.set(0.45, -0.15, -0.9);
-            handMesh.castShadow = true;
-            handGroup.add(handMesh);
-            
-            // Block in der Hand (wird je nach selected Slot aktualisiert)
-            const blockHolder = new THREE.Group();
-            blockHolder.name = "heldBlock";
-            blockHolder.position.set(0.45, -0.15, -0.95);
-            handGroup.add(blockHolder);
-            
-            scene.add(handGroup);
-            return blockHolder;
-        }
-        
-        let heldBlockGroup = null;
-        function updateHandModel() {
-            if (!heldBlockGroup) {
-                const holder = createHandModel();
-                heldBlockGroup = holder;
-            } else {
-                // Alten Block entfernen
-                while(heldBlockGroup.children.length) heldBlockGroup.remove(heldBlockGroup.children[0]);
-            }
-            const currentType = getCurrentBlockType();
-            if (currentType !== null) {
-                const blockDef = BLOCK_TYPES[currentType];
-                const blockMat = new THREE.MeshStandardMaterial({ color: blockDef.color, roughness: 0.5 });
-                const blockMesh = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), blockMat);
-                blockMesh.castShadow = true;
-                blockMesh.position.set(0, 0, 0);
-                heldBlockGroup.add(blockMesh);
-            }
-        }
-        
-        // --- Große Welt generieren (40x40, viele Bäume, Hügel) ---
-        const groundSize = 44;   // von -22 bis +22 => 44 Blöcke breit
+        // --- Welt generieren (verbesserte Startzone freihalten) ---
+        const groundSize = 28;
         const half = groundSize / 2;
         
-        // 1. Boden mit Höhenvariation (einfache Hügel)
+        // 1. Boden (Gras + Erde Muster)
         for (let i = -half; i < half; i++) {
             for (let j = -half; j < half; j++) {
-                let height = 0;
-                // Simuliere kleine Hügel durch Sinus
-                let hill = Math.sin(i * 0.25) * Math.cos(j * 0.25) * 1.2;
-                height = Math.floor(hill);
-                if (height > 2) height = 2;
-                if (height < -1) height = -1;
-                // Basisboden auf Y = height
                 let type = 0; // Gras
-                if (height === 0 && Math.random() < 0.08) type = 1; // Erde
-                if (height === 1 && Math.random() < 0.2) type = 4; // Stein auf Hügeln
-                addBlockToWorld(i, height, j, type);
-                // Falls Höhe > 0, fülle darunter mit Erde/Stein
-                for (let k = height-1; k >= -2; k--) {
-                    if (!getBlockAt(i, k, j)) {
-                        const fillType = (k < -1) ? 4 : 1;
-                        addBlockToWorld(i, k, j, fillType);
-                    }
-                }
+                if (Math.random() < 0.07) type = 1; // Erde
+                addBlockToWorld(i, 0, j, type);
             }
         }
         
-        // 2. Bäume (viele, vermeiden Startzone um 0,0)
-        function isStartArea(x, z) { return Math.abs(x) <= 5 && Math.abs(z) <= 5; }
+        // 2. Bäume vermeiden Startbereich (-4..4)
+        function isStartArea(x, z) { return Math.abs(x) <= 4.5 && Math.abs(z) <= 4.5; }
         function buildTree(tx, tz) {
             if (isStartArea(tx, tz)) return false;
-            // Bodenhöhe finden
-            let groundY = -2;
-            for (let y = 5; y >= -2; y--) {
-                if (getBlockAt(tx, y, tz)) { groundY = y+1; break; }
+            // Platzprüfung
+            for (let dy = 1; dy <= 3; dy++) {
+                if (getBlockAt(tx, dy, tz)) return false;
             }
-            if (groundY < 0) groundY = 0;
-            if (getBlockAt(tx, groundY+1, tz) || getBlockAt(tx, groundY+2, tz)) return false;
             // Stamm
-            addBlockToWorld(tx, groundY+1, tz, 2);
-            addBlockToWorld(tx, groundY+2, tz, 2);
-            addBlockToWorld(tx, groundY+3, tz, 2);
-            // Laub
-            const leaf = 3;
-            addBlockToWorld(tx, groundY+4, tz, leaf);
-            for (let dx = -1; dx <= 1; dx++) {
-                for (let dz = -1; dz <= 1; dz++) {
-                    if (Math.abs(dx)+Math.abs(dz) <= 2) addBlockToWorld(tx+dx, groundY+4, tz+dz, leaf);
-                }
-            }
-            addBlockToWorld(tx, groundY+5, tz, leaf);
-            addBlockToWorld(tx+1, groundY+5, tz, leaf);
-            addBlockToWorld(tx-1, groundY+5, tz, leaf);
-            addBlockToWorld(tx, groundY+5, tz+1, leaf);
-            addBlockToWorld(tx, groundY+5, tz-1, leaf);
+            addBlockToWorld(tx, 1, tz, 2); // Holz
+            addBlockToWorld(tx, 2, tz, 2);
+            addBlockToWorld(tx, 3, tz, 2);
+            // Laubkrone
+            const leafType = 3;
+            addBlockToWorld(tx, 4, tz, leafType);
+            addBlockToWorld(tx+1, 4, tz, leafType);
+            addBlockToWorld(tx-1, 4, tz, leafType);
+            addBlockToWorld(tx, 4, tz+1, leafType);
+            addBlockToWorld(tx, 4, tz-1, leafType);
+            addBlockToWorld(tx, 5, tz, leafType);
+            addBlockToWorld(tx+1, 5, tz, leafType);
+            addBlockToWorld(tx-1, 5, tz, leafType);
+            addBlockToWorld(tx, 5, tz+1, leafType);
+            addBlockToWorld(tx, 5, tz-1, leafType);
             return true;
         }
         
-        for (let i = 0; i < 140; i++) {
-            const x = Math.floor(Math.random() * (groundSize-8)) - (half-4);
-            const z = Math.floor(Math.random() * (groundSize-8)) - (half-4);
+        for (let i = 0; i < 70; i++) {
+            const x = Math.floor(Math.random() * (groundSize-6)) - (half-3);
+            const z = Math.floor(Math.random() * (groundSize-6)) - (half-3);
             buildTree(x, z);
         }
         
-        // 3. Steine und Erzvorkommen (Stein an der Oberfläche)
-        for (let i = 0; i < 300; i++) {
-            const x = Math.floor(Math.random() * (groundSize-4)) - (half-2);
-            const z = Math.floor(Math.random() * (groundSize-4)) - (half-2);
+        // 3. Steine / Kiesel
+        for (let i = 0; i < 150; i++) {
+            const x = Math.floor(Math.random() * (groundSize-2)) - (half-1);
+            const z = Math.floor(Math.random() * (groundSize-2)) - (half-1);
             if (isStartArea(x, z)) continue;
-            let y = -1;
-            for (let yy = 3; yy >= -1; yy--) if (getBlockAt(x, yy, z)) { y = yy+1; break; }
-            if (y > 0 && !getBlockAt(x, y, z) && Math.random() < 0.3) {
-                addBlockToWorld(x, y, z, 4);
+            if (!getBlockAt(x, 1, z) && getBlockAt(x, 0, z)) {
+                if (Math.random() < 0.4) addBlockToWorld(x, 1, z, 4); // Stein
             }
         }
         
-        // 4. Kleiner See
-        const lakeX = 11, lakeZ = -9;
-        for (let dx = -3; dx <= 3; dx++) {
-            for (let dz = -3; dz <= 3; dz++) {
-                if (Math.abs(dx)+Math.abs(dz) <= 3.5) {
-                    const wx = lakeX + dx, wz = lakeZ + dz;
-                    for (let yy = 2; yy >= -1; yy--) {
-                        const block = getBlockAt(wx, yy, wz);
-                        if (block && block.y >= 0) {
-                            removeBlockAt(wx, yy, wz);
-                        }
-                    }
-                    const waterMat = new THREE.MeshStandardMaterial({ color: 0x3b9eff, roughness: 0.3, metalness: 0.7, emissive: 0x004466 });
-                    const waterGeom = new THREE.BoxGeometry(blockSize, 0.6, blockSize);
-                    const waterBlock = new THREE.Mesh(waterGeom, waterMat);
-                    waterBlock.position.set(wx, 0.3, wz);
-                    waterBlock.castShadow = true;
-                    scene.add(waterBlock);
-                    blocks.push({
-                        mesh: waterBlock, x: wx, y: 0.3, z: wz, typeId: 99,
-                        minX: wx-0.5, maxX: wx+0.5, minY: 0.0, maxY: 0.9, minZ: wz-0.5, maxZ: wz+0.5
-                    });
-                }
+        // 4. Ein paar Blumen / Büsche (Deko, als Erde/Laub)
+        for (let i = 0; i < 180; i++) {
+            const x = Math.floor(Math.random() * (groundSize-2)) - (half-1);
+            const z = Math.floor(Math.random() * (groundSize-2)) - (half-1);
+            if (isStartArea(x, z) || getBlockAt(x, 1, z)) continue;
+            if (getBlockAt(x, 0, z) && Math.random() < 0.3) {
+                addBlockToWorld(x, 1, z, 1); // Erde als kleine Erhebung oder Blume
             }
         }
         
-        // --- Spieler (2 Blöcke groß, 1.62 Augen Höhe, Kollisionsbox 1.8 hoch) ---
+        // Hilfsfunktion getBlockAt
+        function getBlockAt(x, y, z) {
+            for (let b of blocks) if (b.x === x && b.y === y && b.z === z) return b;
+            return null;
+        }
+        
+        // --- Spieler-Physik (Schwerkraft, Springen, Kollision) ---
         let playerPos = new THREE.Vector3(0, 1.62, 0);
         let playerVelocity = new THREE.Vector3(0, 0, 0);
+        let onGround = true;
         const playerHeight = 1.62;
         const playerRadius = 0.35;
         const GRAVITY = 25.0;
         const JUMP_POWER = 8.5;
         
+        // Kollisionsprüfung (Bounding Box)
         function collidesWithBlocks(posX, posZ, posY) {
             const minX = posX - playerRadius;
             const maxX = posX + playerRadius;
@@ -464,13 +397,17 @@
             return false;
         }
         
+        // Prüft, ob Bodenkontakt besteht
         function isOnGround() {
             const footY = playerPos.y - 0.9 - 0.05;
-            return collidesWithBlocks(playerPos.x, playerPos.z, footY + 0.9);
+            const testPos = new THREE.Vector3(playerPos.x, footY, playerPos.z);
+            return collidesWithBlocks(testPos.x, testPos.z, testPos.y + 0.9);
         }
         
+        // Bewegung mit Kollision (X und Z separat, Y mit Schwerkraft)
         function tryMoveXZ(deltaX, deltaZ) {
-            let newX = playerPos.x, newZ = playerPos.z;
+            let newX = playerPos.x;
+            let newZ = playerPos.z;
             if (deltaX !== 0) {
                 newX = playerPos.x + deltaX;
                 if (!collidesWithBlocks(newX, playerPos.z, playerPos.y)) playerPos.x = newX;
@@ -481,23 +418,33 @@
             }
         }
         
+        // Y-Bewegung mit Kollision
         function tryMoveY(deltaY) {
             let newY = playerPos.y + deltaY;
             if (!collidesWithBlocks(playerPos.x, playerPos.z, newY)) {
                 playerPos.y = newY;
                 return true;
             } else {
+                // Kollision: wenn nach unten, setze onGround = true
                 if (deltaY < 0) {
                     playerVelocity.y = 0;
-                    while (!collidesWithBlocks(playerPos.x, playerPos.z, playerPos.y - 0.01) && playerPos.y > 0.2) playerPos.y -= 0.01;
-                } else if (deltaY > 0) playerVelocity.y = 0;
+                    // Korrektur auf Boden
+                    while (!collidesWithBlocks(playerPos.x, playerPos.z, playerPos.y - 0.01) && playerPos.y > 0.1) playerPos.y -= 0.01;
+                } else if (deltaY > 0) {
+                    playerVelocity.y = 0; // Kopfstopp
+                }
                 return false;
             }
         }
         
-        function jump() { if (isOnGround()) playerVelocity.y = JUMP_POWER; }
+        // Springen
+        function jump() {
+            if (isOnGround()) {
+                playerVelocity.y = JUMP_POWER;
+            }
+        }
         
-        // --- Maus- und Tastatursteuerung (W = vorwärts) ---
+        // Maussteuerung
         let mouseLocked = false;
         let yaw = -Math.PI / 4;
         let pitch = 0;
@@ -505,11 +452,16 @@
         const keyState = { KeyW: false, KeyS: false, KeyA: false, KeyD: false, Space: false };
         
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') { e.preventDefault(); jump(); }
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
             if (keyState.hasOwnProperty(e.code)) keyState[e.code] = true;
+            // Zahlen für Slotauswahl
             if (e.code >= 'Digit1' && e.code <= 'Digit9') {
                 const idx = parseInt(e.code.slice(-1)) - 1;
-                if (idx >= 0 && idx < 9) { selectedSlot = idx; updateHotbarUI(); updateHandModel(); }
+                if (idx >= 0 && idx < 9) selectedSlot = idx;
+                updateHotbarUI();
                 e.preventDefault();
             }
             if (e.code === 'Escape' && mouseLocked) document.exitPointerLock();
@@ -518,13 +470,15 @@
             if (keyState.hasOwnProperty(e.code)) keyState[e.code] = false;
         });
         
+        // Mauszeiger-Sperre
         const canvas = renderer.domElement;
         canvas.addEventListener('click', () => canvas.requestPointerLock());
         document.addEventListener('pointerlockchange', lockChange);
         function lockChange() {
             if (document.pointerLockElement === canvas) {
                 mouseLocked = true;
-                document.getElementById('status').innerHTML = "🎮 Maus gesperrt | WASD + Maus | 2 Blöcke groß";
+                document.getElementById('status').innerHTML = "🎮 Maus gesperrt | WASD + Maus | Block abbauen/platzieren";
+                document.getElementById('controls-info').style.opacity = '0.8';
                 document.addEventListener('mousemove', onMouseMove);
             } else {
                 mouseLocked = false;
@@ -540,9 +494,9 @@
             pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
         }
         
-        // --- Raycaster für Blockabbau/Platzierung ---
+        // --- Raycaster für Blockabbau & Platzierung ---
         const raycaster = new THREE.Raycaster();
-        const hitDistance = 5.2;
+        const hitDistance = 4.8;
         
         function getLookedBlock() {
             const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -550,25 +504,28 @@
             const intersects = raycaster.intersectObjects(blocks.map(b => b.mesh));
             if (intersects.length > 0 && intersects[0].distance <= hitDistance) {
                 const hitMesh = intersects[0].object;
-                return blocks.find(b => b.mesh === hitMesh);
+                for (let b of blocks) {
+                    if (b.mesh === hitMesh) return b;
+                }
             }
             return null;
         }
         
+        // Block abbauen
         function breakBlock() {
             const block = getLookedBlock();
             if (!block) return;
-            if (block.typeId === 99) return; // Wasser nicht abbauen
-            const type = removeBlockAt(block.x, block.y, block.z);
-            if (type !== null) addItemToInventory(type, 1);
-            // kurze Arm-Animation (optional)
-            if (heldBlockGroup) heldBlockGroup.position.z = -0.1;
-            setTimeout(() => { if(heldBlockGroup) heldBlockGroup.position.z = 0; }, 100);
+            const typeId = block.typeId;
+            if (removeBlockAt(block.x, block.y, block.z)) {
+                addItemToInventory(typeId, 1);
+            }
         }
         
+        // Block platzieren
         function placeBlock() {
             const blockType = getCurrentBlockType();
             if (blockType === null) return;
+            
             const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
             raycaster.set(camera.position, direction);
             const intersects = raycaster.intersectObjects(blocks.map(b => b.mesh));
@@ -576,6 +533,7 @@
                 const hit = intersects[0];
                 const hitBlock = blocks.find(b => b.mesh === hit.object);
                 if (hitBlock) {
+                    // Bestimme Nachbarposition (Face normal)
                     const normal = hit.face.normal;
                     let newX = hitBlock.x, newY = hitBlock.y, newZ = hitBlock.z;
                     if (normal.x > 0.5) newX += 1;
@@ -585,8 +543,8 @@
                     else if (normal.z > 0.5) newZ += 1;
                     else if (normal.z < -0.5) newZ -= 1;
                     
+                    // Prüfe ob Platz frei und nicht im Spieler
                     if (!getBlockAt(newX, newY, newZ)) {
-                        // Kollision mit Spieler prüfen
                         const tempBox = { minX: newX-0.5, maxX: newX+0.5, minY: newY-0.5, maxY: newY+0.5, minZ: newZ-0.5, maxZ: newZ+0.5 };
                         const playerMinX = playerPos.x - playerRadius;
                         const playerMaxX = playerPos.x + playerRadius;
@@ -594,42 +552,45 @@
                         const playerMaxY = playerPos.y + 0.9;
                         const playerMinZ = playerPos.z - playerRadius;
                         const playerMaxZ = playerPos.z + playerRadius;
-                        const collides = (playerMaxX > tempBox.minX && playerMinX < tempBox.maxX &&
-                                          playerMaxY > tempBox.minY && playerMinY < tempBox.maxY &&
-                                          playerMaxZ > tempBox.minZ && playerMinZ < tempBox.maxZ);
-                        if (!collides) {
-                            const removed = removeCurrentItem();
-                            if (removed !== null) addBlockToWorld(newX, newY, newZ, blockType);
-                            // kurze Arm-Animation
-                            if (heldBlockGroup) heldBlockGroup.position.z = -0.1;
-                            setTimeout(() => { if(heldBlockGroup) heldBlockGroup.position.z = 0; }, 100);
+                        const collidesWithPlayer = (playerMaxX > tempBox.minX && playerMinX < tempBox.maxX &&
+                                                    playerMaxY > tempBox.minY && playerMinY < tempBox.maxY &&
+                                                    playerMaxZ > tempBox.minZ && playerMinZ < tempBox.maxZ);
+                        if (!collidesWithPlayer) {
+                            // Item aus Inventar nehmen und Block setzen
+                            const removedType = removeCurrentItem();
+                            if (removedType !== null) {
+                                addBlockToWorld(newX, newY, newZ, blockType);
+                            }
                         }
                     }
                 }
             }
         }
         
+        // Mausklick-Events
         canvas.addEventListener('mousedown', (e) => {
             if (!mouseLocked) return;
             e.preventDefault();
-            if (e.button === 0) breakBlock();
-            else if (e.button === 2) placeBlock();
+            if (e.button === 0) breakBlock();   // Links
+            else if (e.button === 2) placeBlock(); // Rechts
         });
         canvas.addEventListener('contextmenu', (e) => e.preventDefault());
         
+        // Scrollrad für Slotwechsel
         window.addEventListener('wheel', (e) => {
             if (!mouseLocked) return;
             e.preventDefault();
             if (e.deltaY > 0) selectedSlot = (selectedSlot + 1) % 9;
             else selectedSlot = (selectedSlot - 1 + 9) % 9;
             updateHotbarUI();
-            updateHandModel();
         });
         
-        // --- Bewegung & Schwerkraft (pro Frame) ---
+        // --- Bewegung & Schwerkraft (Update pro Frame) ---
         let lastTime = performance.now();
         function updateMovement(deltaSec) {
             if (!mouseLocked) return;
+            
+            // Bewegung X/Z
             const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
             const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)).normalize();
             let move = new THREE.Vector3(0,0,0);
@@ -641,56 +602,66 @@
             const speed = moveSpeed * deltaSec;
             tryMoveXZ(move.x * speed, move.z * speed);
             
-            if (!isOnGround()) playerVelocity.y -= GRAVITY * deltaSec;
-            else { if (playerVelocity.y < 0) playerVelocity.y = 0; }
+            // Schwerkraft
+            if (!isOnGround()) {
+                playerVelocity.y -= GRAVITY * deltaSec;
+            } else {
+                if (playerVelocity.y < 0) playerVelocity.y = 0;
+                // leichte Korrektur auf Boden
+                while (!collidesWithBlocks(playerPos.x, playerPos.z, playerPos.y - 0.01) && playerPos.y > 0.2) playerPos.y -= 0.01;
+            }
             tryMoveY(playerVelocity.y * deltaSec);
             
+            // Aktualisiere Kamera
             camera.position.copy(playerPos);
             camera.rotation.order = 'YXZ';
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
         }
         
-        // --- Dekoration: Partikel & Glühwürmchen ---
-        const particleCount = 600;
+        // Dekorative Partikel / fliegende Lichter
+        const particleCount = 500;
         const particleGeom = new THREE.BufferGeometry();
         const particlePositions = new Float32Array(particleCount * 3);
         for (let i = 0; i < particleCount; i++) {
-            particlePositions[i*3] = (Math.random() - 0.5) * 110;
-            particlePositions[i*3+1] = Math.random() * 15;
-            particlePositions[i*3+2] = (Math.random() - 0.5) * 100;
+            particlePositions[i*3] = (Math.random() - 0.5) * 100;
+            particlePositions[i*3+1] = Math.random() * 12;
+            particlePositions[i*3+2] = (Math.random() - 0.5) * 90;
         }
         particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-        const particleMat = new THREE.PointsMaterial({ color: 0xaaddff, size: 0.08, transparent: true, opacity: 0.4 });
+        const particleMat = new THREE.PointsMaterial({ color: 0xaaddff, size: 0.07, transparent: true, opacity: 0.4 });
         const particles = new THREE.Points(particleGeom, particleMat);
         scene.add(particles);
         
+        // ein paar fliegende Glühwürmchen
         const fireflies = [];
-        for (let i = 0; i < 100; i++) {
-            const fly = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffaa55, emissive: 0x442200 }));
-            fly.userData = { x: (Math.random()-0.5)*70, z: (Math.random()-0.5)*70, y: Math.random()*6+1 };
-            fly.position.set(fly.userData.x, fly.userData.y, fly.userData.z);
+        for (let i = 0; i < 80; i++) {
+            const fly = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffaa55, emissive: 0x442200 }));
+            fly.userData = { offX: (Math.random()-0.5)*40, offZ: (Math.random()-0.5)*40, offY: Math.random()*5+1, speed: 0.5+Math.random() };
+            fly.position.set(fly.userData.offX, fly.userData.offY, fly.userData.offZ);
             scene.add(fly);
             fireflies.push(fly);
         }
         
-        // --- Animationsloop ---
-        let prevTime = performance.now();
+        // Animationsloop
+        let previousTime = performance.now();
         function animate() {
             const now = performance.now();
-            let delta = Math.min(0.033, (now - prevTime) / 1000);
-            prevTime = now;
+            let delta = Math.min(0.033, (now - previousTime) / 1000);
+            previousTime = now;
             if (delta < 0.001) delta = 0.016;
+            
             updateMovement(delta);
             
-            particles.rotation.y += 0.0015;
+            // Dynamik für Partikel & Licht
+            particles.rotation.y += 0.002;
             backLight.intensity = 0.28 + Math.sin(Date.now() * 0.002) * 0.07;
             for (let f of fireflies) {
-                f.position.y += Math.sin(Date.now() * 2.5 + f.userData.x) * 0.01;
-                f.position.x += Math.sin(Date.now() * 1.2 + f.userData.z) * 0.004;
-                f.position.z += Math.cos(Date.now() * 1.1 + f.userData.x) * 0.004;
-                if (Math.abs(f.position.x) > 55) f.position.x *= -0.95;
-                if (Math.abs(f.position.z) > 55) f.position.z *= -0.95;
+                f.position.y += Math.sin(Date.now() * 3 + f.userData.offX) * 0.008;
+                f.position.x += Math.sin(Date.now() * 1.2 + f.userData.offZ) * 0.005;
+                f.position.z += Math.cos(Date.now() * 1.1 + f.userData.offX) * 0.005;
+                if (Math.abs(f.position.x) > 45) f.position.x *= -0.9;
+                if (Math.abs(f.position.z) > 45) f.position.z *= -0.9;
             }
             
             renderer.render(scene, camera);
@@ -704,17 +675,14 @@
         });
         
         updateHotbarUI();
-        createHandModel();
-        updateHandModel();
+        animate();
         
-        // Startposition sichern (falls blockiert)
+        // Startposition anpassen, falls blockiert
         if (collidesWithBlocks(playerPos.x, playerPos.z, playerPos.y)) {
-            playerPos.set(0, 2.2, 0);
+            playerPos.set(0, 2.5, 0);
             while (collidesWithBlocks(playerPos.x, playerPos.z, playerPos.y) && playerPos.y < 5) playerPos.y += 0.2;
             camera.position.copy(playerPos);
         }
-        
-        animate();
     </script>
 </body>
 </html>
