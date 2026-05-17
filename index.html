@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Minecraft Style Welt - First Person Erkundung</title>
+    <title>Minecraft Style Welt - First Person | Jetzt mit Bewegung</title>
     <style>
         body {
             margin: 0;
@@ -67,13 +67,26 @@
             z-index: 15;
             white-space: nowrap;
             font-size: 18px;
-            transition: opacity 1s;
+            transition: opacity 0.5s;
             border: 1px solid #ffaa44;
             font-family: monospace;
         }
         @media (max-width: 600px) {
             #info, #controls { font-size: 10px; padding: 6px 12px; }
             #instruction { font-size: 14px; white-space: nowrap; bottom: 25%; }
+        }
+        #status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 10;
         }
     </style>
 </head>
@@ -88,8 +101,10 @@
     <div id="instruction">
         🖱️ KLICKEN SIE AUF DIE WELT, UM ZU STARTEN 🎮
     </div>
+    <div id="status">
+        ✅ Bereit
+    </div>
 
-    <!-- Importiere Three.js Kernbibliothek und zusätzliche Helfer -->
     <script type="importmap">
         {
             "imports": {
@@ -101,27 +116,21 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // --- Setup der Szene ---
+        // --- Setup ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); // Himmelblau
-        scene.fog = new THREE.Fog(0x87CEEB, 40, 80);  // leichter Nebel für Tiefe
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 45, 90);
 
-        // --- Kamera (First Person) ---
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1.6, 0); // Standard Augenhöhe
-        
-        // --- Renderer ---
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true; // Schatten aktivieren für besseren Look
+        renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        // --- Beleuchtung ---
-        // Umgebungslicht
+        // --- Licht ---
         const ambientLight = new THREE.AmbientLight(0x404060, 0.65);
         scene.add(ambientLight);
-        // Hauptlicht (Sonne) - mit Schatten
         const directionalLight = new THREE.DirectionalLight(0xfff5d1, 1.2);
         directionalLight.position.set(15, 20, 5);
         directionalLight.castShadow = true;
@@ -135,186 +144,141 @@
         directionalLight.shadow.camera.top = 15;
         directionalLight.shadow.camera.bottom = -15;
         scene.add(directionalLight);
-        // Fülllicht von unten für Schattenaufhellung
         const fillLight = new THREE.PointLight(0x5577aa, 0.3);
         fillLight.position.set(0, -5, 0);
         scene.add(fillLight);
-        
-        // Kleines Hintergrundlicht
-        const backLight = new THREE.PointLight(0xffaa66, 0.2);
+        const backLight = new THREE.PointLight(0xffaa66, 0.25);
         backLight.position.set(-5, 10, -8);
         scene.add(backLight);
 
-        // --- Welten-Generierung: Blöcke speichern für Kollision & Darstellung ---
-        const blocks = []; // jedes Element = { mesh, x, y, z, width, height, depth }
+        // --- Block-Verwaltung ---
+        const blocks = []; // { mesh, x, y, z, minX, maxX, minY, maxY, minZ, maxZ }
         const blockSize = 1;
-        
-        // Hilfsfunktion: Block erstellen und zur Szene hinzufügen
+
         function addBlock(x, y, z, color, materialType = 'standard') {
-            // Material je nach Blocktyp mit leichter Variation für Minecraft-Feeling
             let material;
-            if (materialType === 'grass') {
-                // Grasblock: oben grün, seiten braun-grün, unten braun (Vereinfacht: ein Material mit Farbe)
-                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.7, metalness: 0.05 });
-            } else if (materialType === 'wood') {
-                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.9, metalness: 0.02 });
-            } else if (materialType === 'leaf') {
-                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, metalness: 0.03, emissive: 0x112200 });
-            } else {
-                material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 });
+            switch(materialType) {
+                case 'grass': material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.7, metalness: 0.05 }); break;
+                case 'wood': material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.9, metalness: 0.02 }); break;
+                case 'leaf': material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, metalness: 0.03, emissive: 0x112200 }); break;
+                default: material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 });
             }
-            
             const geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(x, y, z);
             cube.castShadow = true;
             cube.receiveShadow = true;
             scene.add(cube);
-            
             blocks.push({
-                mesh: cube,
-                x: x, y: y, z: z,
+                mesh: cube, x, y, z,
                 minX: x - 0.5, maxX: x + 0.5,
                 minY: y - 0.5, maxY: y + 0.5,
                 minZ: z - 0.5, maxZ: z + 0.5
             });
         }
-        
-        // --- Welt generieren: Boden und Bäume, ein paar Blumen / Sträucher ---
-        
-        // 1. Grasboden (20x20 Bereich) auf Y = 0
-        const groundSize = 24;
+
+        // --- Welt generieren (freier Startbereich um (0,0)) ---
+        const groundSize = 26;
         const half = groundSize / 2;
+        
+        // 1. Boden (Y=0)
         for (let i = -half; i < half; i++) {
             for (let j = -half; j < half; j++) {
-                // leichte Höhenvariation? Für einfache Welt bleibt flach, aber etwas Moos/Erde?
-                let blockColor = 0x6b8e23; // Grasgrün
-                // zufällig vereinzelte Erde / Gras-Patches für Abwechslung
-                if (Math.random() < 0.05) blockColor = 0x8B5A2B; // Erde
-                addBlock(i, 0, j, blockColor, 'grass');
+                let color = 0x6b8e23;
+                if (Math.random() < 0.06) color = 0x8B5A2B; // Erde
+                addBlock(i, 0, j, color, 'grass');
             }
         }
+
+        // 2. Bäume vermeiden im Startbereich (-3..3 xz)
+        const startExclude = (x, z) => (Math.abs(x) <= 3.5 && Math.abs(z) <= 3.5);
         
-        // 2. Zufällige Bäume (ca. 45 Stück)
-        function isTreePositionFree(tx, tz, existingTrees) {
-            // Mindestabstand zwischen Bäumen 3 Blöcke
-            for (let t of existingTrees) {
-                if (Math.abs(t.x - tx) < 2.5 && Math.abs(t.z - tz) < 2.5) return false;
+        // Baumfunktion
+        function buildTree(tx, tz) {
+            if (startExclude(tx, tz)) return false;
+            // Prüfen ob genug Platz (kein anderer Baum in 2.5 Entfernung)
+            for (let b of blocks) {
+                if (Math.abs(b.x - tx) < 2.2 && Math.abs(b.z - tz) < 2.2 && b.y > 0) return false;
             }
-            // nicht zu nah am Rand
-            if (Math.abs(tx) > half - 3 || Math.abs(tz) > half - 3) return false;
+            const woodColor = 0x8B5A2B;
+            const leafColor = 0x2e8b57;
+            addBlock(tx, 1, tz, woodColor, 'wood');
+            addBlock(tx, 2, tz, woodColor, 'wood');
+            addBlock(tx, 3, tz, woodColor, 'wood');
+            // Laub
+            addBlock(tx, 4, tz, leafColor, 'leaf');
+            addBlock(tx+1, 4, tz, leafColor, 'leaf');
+            addBlock(tx-1, 4, tz, leafColor, 'leaf');
+            addBlock(tx, 4, tz+1, leafColor, 'leaf');
+            addBlock(tx, 4, tz-1, leafColor, 'leaf');
+            addBlock(tx, 5, tz, leafColor, 'leaf');
+            addBlock(tx+1, 5, tz, leafColor, 'leaf');
+            addBlock(tx-1, 5, tz, leafColor, 'leaf');
+            addBlock(tx, 5, tz+1, leafColor, 'leaf');
+            addBlock(tx, 5, tz-1, leafColor, 'leaf');
+            addBlock(tx+1, 4, tz+1, leafColor, 'leaf');
+            addBlock(tx-1, 4, tz-1, leafColor, 'leaf');
+            addBlock(tx+1, 4, tz-1, leafColor, 'leaf');
+            addBlock(tx-1, 4, tz+1, leafColor, 'leaf');
             return true;
         }
         
-        const treePositions = [];
-        const treeCount = 52;
-        for (let t = 0; t < treeCount; t++) {
-            let attempts = 0;
-            let placed = false;
-            while (!placed && attempts < 30) {
-                const randX = Math.floor(Math.random() * (groundSize - 6)) - (half - 3);
-                const randZ = Math.floor(Math.random() * (groundSize - 6)) - (half - 3);
-                if (isTreePositionFree(randX, randZ, treePositions)) {
-                    treePositions.push({ x: randX, z: randZ });
-                    placed = true;
-                    // Baum bauen
-                    const woodColor = 0x8B5A2B;
-                    const leafColor = 0x2e8b57;
-                    // Stamm (3 Blöcke hoch)
-                    addBlock(randX, 1, randZ, woodColor, 'wood');
-                    addBlock(randX, 2, randZ, woodColor, 'wood');
-                    addBlock(randX, 3, randZ, woodColor, 'wood');
-                    // Laubkrone: einfache Kugelform / Würfel
-                    // Ebene 4 (über Stamm)
-                    addBlock(randX, 4, randZ, leafColor, 'leaf');
-                    addBlock(randX + 1, 4, randZ, leafColor, 'leaf');
-                    addBlock(randX - 1, 4, randZ, leafColor, 'leaf');
-                    addBlock(randX, 4, randZ + 1, leafColor, 'leaf');
-                    addBlock(randX, 4, randZ - 1, leafColor, 'leaf');
-                    // Ebene 5 (Spitze)
-                    addBlock(randX, 5, randZ, leafColor, 'leaf');
-                    addBlock(randX + 1, 5, randZ, leafColor, 'leaf');
-                    addBlock(randX - 1, 5, randZ, leafColor, 'leaf');
-                    addBlock(randX, 5, randZ + 1, leafColor, 'leaf');
-                    addBlock(randX, 5, randZ - 1, leafColor, 'leaf');
-                    // zusätzliche Laubblöcke an den Seiten für mehr Volumen
-                    addBlock(randX + 1, 4, randZ + 1, leafColor, 'leaf');
-                    addBlock(randX - 1, 4, randZ - 1, leafColor, 'leaf');
-                    addBlock(randX + 1, 4, randZ - 1, leafColor, 'leaf');
-                    addBlock(randX - 1, 4, randZ + 1, leafColor, 'leaf');
-                }
-                attempts++;
+        // Bäume setzen (ca. 55 Stück, außerhalb der Startzone)
+        let treesPlaced = 0;
+        for (let t = 0; t < 80 && treesPlaced < 60; t++) {
+            const randX = Math.floor(Math.random() * (groundSize - 6)) - (half - 3);
+            const randZ = Math.floor(Math.random() * (groundSize - 6)) - (half - 3);
+            if (!startExclude(randX, randZ)) {
+                if (buildTree(randX, randZ)) treesPlaced++;
             }
         }
         
-        // 3. Ein paar einzelne Blumen / kleine Büsche (bunte Blöcke als Dekoration)
-        const flowerColors = [0xFF69B4, 0xFFD700, 0xCD5C5C, 0x9370DB];
-        for (let i = 0; i < 180; i++) {
+        // 3. Blumen und Dekoration (nicht in Startblockaden)
+        const flowerColors = [0xFF69B4, 0xFFD700, 0xCD5C5C, 0x9370DB, 0x00CED1];
+        for (let i = 0; i < 200; i++) {
             const fx = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
             const fz = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
-            // checken ob auf Gras und nicht von Baum besetzt
+            if (Math.abs(fx) < 3.5 && Math.abs(fz) < 3.5) continue; // Startbereich sauber halten
             let occupied = false;
-            for (let b of blocks) {
-                if (b.x === fx && b.z === fz && b.y === 1) {
-                    occupied = true;
-                    break;
-                }
-            }
+            for (let b of blocks) if (b.x === fx && b.z === fz && b.y === 1) { occupied = true; break; }
             if (!occupied && Math.abs(fx) < half-1 && Math.abs(fz) < half-1) {
                 const color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
-                addBlock(fx, 1, fz, color, 'grass'); // kleine Blume
+                addBlock(fx, 1, fz, color, 'grass');
             }
         }
         
-        // 4. Zusätzliche Steine / Kiesel (graue Blöcke verstreut)
-        for (let i = 0; i < 80; i++) {
+        // 4. Kleine Steine
+        for (let i = 0; i < 100; i++) {
             const sx = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
             const sz = Math.floor(Math.random() * (groundSize - 2)) - (half - 1);
-            let occupiedStone = false;
-            for (let b of blocks) {
-                if (b.x === sx && b.z === sz && b.y === 1) {
-                    occupiedStone = true;
-                    break;
-                }
-            }
-            if (!occupiedStone && Math.abs(sx) < half-1 && Math.abs(sz) < half-1) {
-                addBlock(sx, 1, sz, 0x888888, 'grass');
-            }
+            if (Math.abs(sx) < 3 && Math.abs(sz) < 3) continue;
+            let occupied = false;
+            for (let b of blocks) if (b.x === sx && b.z === sz && b.y === 1) { occupied = true; break; }
+            if (!occupied) addBlock(sx, 1, sz, 0x888888, 'grass');
         }
         
-        // 5. Ein kleiner See? Nicht nötig, aber erhöht Atmosphäre: ein paar Wasserblöcke (dekorativ)
-        // Füge ein kleines Wasserbecken hinzu an einer Stelle
-        const pondX = 5, pondZ = -4;
+        // 5. Kleiner Teich (nördlich)
+        const pondX = 6, pondZ = -6;
         for (let dx = -2; dx <= 2; dx++) {
             for (let dz = -2; dz <= 2; dz++) {
-                if (Math.abs(dx) <= 1.5 && Math.abs(dz) <= 1.5 && (dx !== 0 || dz !== 0)) {
-                    // Entferne ggf. vorhandenen Grasblock und setze Wasser (nur optisch, keine Physik)
-                    // Check ob Position im Bodenbereich ist
+                if (Math.abs(dx) <= 1.8 && Math.abs(dz) <= 1.8 && (dx !== 0 || dz !== 0)) {
                     const worldX = pondX + dx;
                     const worldZ = pondZ + dz;
-                    // Vorhandenen Block löschen? Einfach Wasser drüber? Nein, wir ersetzen den Grasblock auf y=1 und y=0?
-                    // besser: Wasserblock auf Y=1 setzen (über dem Boden)
-                    let found = false;
                     for (let j = 0; j < blocks.length; j++) {
                         if (blocks[j].x === worldX && blocks[j].z === worldZ && blocks[j].y === 1) {
-                            // Entferne alten Block von Szene
                             scene.remove(blocks[j].mesh);
                             blocks.splice(j,1);
-                            found = true;
                             break;
                         }
                     }
-                    // Wasserblock hinzufügen (blau-transparent)
-                    const waterMat = new THREE.MeshStandardMaterial({ color: 0x3b9eff, roughness: 0.3, metalness: 0.8, emissive: 0x004466 });
+                    const waterMat = new THREE.MeshStandardMaterial({ color: 0x3b9eff, roughness: 0.3, metalness: 0.7, emissive: 0x004466 });
                     const waterGeom = new THREE.BoxGeometry(blockSize, 0.8, blockSize);
                     const waterBlock = new THREE.Mesh(waterGeom, waterMat);
                     waterBlock.position.set(worldX, 1.0, worldZ);
                     waterBlock.castShadow = true;
-                    waterBlock.receiveShadow = false;
                     scene.add(waterBlock);
                     blocks.push({
-                        mesh: waterBlock,
-                        x: worldX, y: 1, z: worldZ,
+                        mesh: waterBlock, x: worldX, y: 1, z: worldZ,
                         minX: worldX - 0.5, maxX: worldX + 0.5,
                         minY: 0.6, maxY: 1.4,
                         minZ: worldZ - 0.5, maxZ: worldZ + 0.5
@@ -323,90 +287,84 @@
             }
         }
         
-        // Kleine Brücke / Stege über den See? Nicht nötig aber ein paar Holzplanken
-        for (let step = -2; step <= 2; step++) {
-            if (step !== 0) {
-                addBlock(pondX + step, 1, pondZ - 2, 0xBC9A6C, 'wood');
-                addBlock(pondX + step, 1, pondZ + 2, 0xBC9A6C, 'wood');
-            }
-        }
+        // --- Spieler-Physik mit Kollision (verbessert) ---
+        const playerHeight = 1.62;
+        const playerRadius = 0.35;
+        let playerPos = new THREE.Vector3(0, playerHeight, 0);
         
-        // --- Spieler-Physik & Bewegung (First Person) ---
-        // Spielerparameter
-        let playerVelocity = { x: 0, z: 0 };
-        const playerHeight = 1.6;   // Augenhöhe
-        const playerRadius = 0.35;   // Kollisionsradius
-        const playerStepHeight = 0.5; // Tritthöhe (optional)
-        
-        // Bewegungseingaben
-        const keyState = {
-            KeyW: false, KeyS: false, KeyA: false, KeyD: false
-        };
-        
-        let moveSpeed = 5.8; // Einheiten pro Sekunde
-        
-        // Maussteuerung (Yaw/Pitch)
-        let mouseX = 0, mouseY = 0;
-        let yaw = -Math.PI / 4;   // horizontaler Winkel
-        let pitch = 0;             // vertikaler Winkel
-        let mouseLocked = false;
-        
-        // Kamerarichtung Vektoren
-        const forward = new THREE.Vector3();
-        const right = new THREE.Vector3();
-        
-        // Hilfsfunktion: Kollisionsprüfung zwischen Spieler-Bounding-Box (Zylinder/Kapsel vereinfacht als Box)
-        function playerCollidesWithBlocks(newX, newZ, newY) {
-            // Spieler-Bounding-Box: Größe ca. 0.7 Breite, 1.8 Höhe
-            const playerMinX = newX - playerRadius;
-            const playerMaxX = newX + playerRadius;
-            const playerMinY = newY - 0.9;  // Fuß bei Höhe -0.9 relativ zu Auge
-            const playerMaxY = newY + 0.9;  // Kopfhöhe
-            const playerMinZ = newZ - playerRadius;
-            const playerMaxZ = newZ + playerRadius;
-            
-            for (let block of blocks) {
-                // Schnelltest: überschneiden sich die AABB?
-                if (playerMaxX > block.minX && playerMinX < block.maxX &&
-                    playerMaxY > block.minY && playerMinY < block.maxY &&
-                    playerMaxZ > block.minZ && playerMinZ < block.maxZ) {
-                    return true;
+        // SICHERSTELLEN: Startposition ist frei von Blöcken
+        function isPlayerPosFree(posX, posZ, posY) {
+            const minX = posX - playerRadius;
+            const maxX = posX + playerRadius;
+            const minZ = posZ - playerRadius;
+            const maxZ = posZ + playerRadius;
+            const minY = posY - 0.9;
+            const maxY = posY + 0.9;
+            for (let b of blocks) {
+                if (maxX > b.minX && minX < b.maxX &&
+                    maxY > b.minY && minY < b.maxY &&
+                    maxZ > b.minZ && minZ < b.maxZ) {
+                    return false;
                 }
             }
-            return false;
+            return true;
         }
         
-        // Bewegung mit Kollision (separate Achsen)
+        // Falls Startpunkt blockiert ist, nach freiem Platz suchen
+        if (!isPlayerPosFree(playerPos.x, playerPos.z, playerPos.y)) {
+            console.warn("Startposition blockiert, suche freien Bereich...");
+            let found = false;
+            for (let dx = -5; dx <= 5; dx++) {
+                for (let dz = -5; dz <= 5; dz++) {
+                    const testX = dx;
+                    const testZ = dz;
+                    if (isPlayerPosFree(testX, testZ, playerHeight)) {
+                        playerPos.set(testX, playerHeight, testZ);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            if (!found) playerPos.set(0, playerHeight+1, 0);
+            document.getElementById('status').innerHTML = "⚠️ Start neu ausgerichtet";
+        } else {
+            document.getElementById('status').innerHTML = "✅ Start frei";
+        }
+        
+        camera.position.copy(playerPos);
+        
+        // Bewegungseingaben
+        const keyState = { KeyW: false, KeyS: false, KeyA: false, KeyD: false };
+        let moveSpeed = 5.6;
+        let mouseLocked = false;
+        let yaw = -Math.PI / 4;
+        let pitch = 0;
+        let forward = new THREE.Vector3();
+        let right = new THREE.Vector3();
+        
+        // Kollisionsabfrage für Bewegung (X und Z getrennt, Y bleibt stabil)
         function tryMove(deltaX, deltaZ, currentPos) {
             let newX = currentPos.x;
             let newZ = currentPos.z;
-            // X-Bewegung testen
             if (deltaX !== 0) {
                 newX = currentPos.x + deltaX;
-                if (!playerCollidesWithBlocks(newX, currentPos.z, currentPos.y)) {
-                    currentPos.x = newX;
-                }
+                if (isPlayerPosFree(newX, currentPos.z, currentPos.y)) currentPos.x = newX;
             }
-            // Z-Bewegung testen
             if (deltaZ !== 0) {
                 newZ = currentPos.z + deltaZ;
-                if (!playerCollidesWithBlocks(currentPos.x, newZ, currentPos.y)) {
-                    currentPos.z = newZ;
-                }
+                if (isPlayerPosFree(currentPos.x, newZ, currentPos.y)) currentPos.z = newZ;
             }
             return currentPos;
         }
         
-        // Event Listener für Tastatur
+        // Tastatur Events
         window.addEventListener('keydown', (e) => {
             if (keyState.hasOwnProperty(e.code)) {
                 keyState[e.code] = true;
                 e.preventDefault();
             }
-            // Optional: Escape zum Entsperren der Maus
-            if (e.code === 'Escape' && mouseLocked) {
-                document.exitPointerLock();
-            }
+            if (e.code === 'Escape' && mouseLocked) document.exitPointerLock();
         });
         window.addEventListener('keyup', (e) => {
             if (keyState.hasOwnProperty(e.code)) {
@@ -415,148 +373,97 @@
             }
         });
         
-        // Maussteuerung mit Pointer Lock API
-        const canvasElement = renderer.domElement;
-        canvasElement.addEventListener('click', () => {
-            canvasElement.requestPointerLock();
-        });
-        
+        // Maussteuerung mit Pointer Lock
+        const canvas = renderer.domElement;
+        canvas.addEventListener('click', () => canvas.requestPointerLock());
         document.addEventListener('pointerlockchange', lockChange);
-        document.addEventListener('mozpointerlockchange', lockChange);
-        
         function lockChange() {
-            if (document.pointerLockElement === canvasElement) {
+            if (document.pointerLockElement === canvas) {
                 mouseLocked = true;
-                // Instruction ausblenden
-                const instrDiv = document.getElementById('instruction');
-                instrDiv.style.opacity = '0';
-                setTimeout(() => instrDiv.style.display = 'none', 1000);
-                // Mausbewegung registrieren
+                document.getElementById('instruction').style.opacity = '0';
+                setTimeout(() => document.getElementById('instruction').style.display = 'none', 800);
                 document.addEventListener('mousemove', onMouseMove);
+                document.getElementById('status').innerHTML = "🎮 Maus gesperrt | WASD";
             } else {
                 mouseLocked = false;
                 document.removeEventListener('mousemove', onMouseMove);
-                const instrDiv = document.getElementById('instruction');
-                instrDiv.style.display = 'block';
-                instrDiv.style.opacity = '1';
-                instrDiv.innerText = '🔓 Maus entsperrt. Klicken zum Fortfahren 🔓';
+                const instr = document.getElementById('instruction');
+                instr.style.display = 'block';
+                instr.style.opacity = '1';
+                instr.innerText = '🔓 Maus entsperrt. Klicken zum Fortfahren 🔓';
+                document.getElementById('status').innerHTML = "⏸ Maus entsperrt";
             }
         }
-        
         function onMouseMove(e) {
             if (!mouseLocked) return;
-            const sensitivity = 0.002;
-            yaw -= e.movementX * sensitivity;
-            pitch -= e.movementY * sensitivity;
-            // Pitch begrenzen (nicht über Kopf / unter Boden)
+            const sens = 0.0022;
+            yaw -= e.movementX * sens;
+            pitch -= e.movementY * sens;
             pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
         }
         
-        // Uhr für Delta-Zeit
-        const clock = new THREE.Clock();
-        
-        // Startposition Spieler (über Grund)
-        let playerPos = new THREE.Vector3(0, playerHeight, 0);
-        // Stelle sicher, dass Startposition frei von Blöcken ist
-        if (playerCollidesWithBlocks(playerPos.x, playerPos.z, playerPos.y)) {
-            playerPos.set(0, playerHeight, 0);
-            // Falls immer noch Kollision, nach oben setzen
-            while (playerCollidesWithBlocks(playerPos.x, playerPos.z, playerPos.y) && playerPos.y < 5) playerPos.y += 0.5;
+        // Partikel für Atmosphäre
+        const particleCount = 400;
+        const particleGeom = new THREE.BufferGeometry();
+        const particlePos = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            particlePos[i*3] = (Math.random() - 0.5) * 90;
+            particlePos[i*3+1] = Math.random() * 9 + 0.5;
+            particlePos[i*3+2] = (Math.random() - 0.5) * 85;
         }
-        camera.position.copy(playerPos);
+        particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.08, transparent: true, opacity: 0.5 });
+        const particles = new THREE.Points(particleGeom, particleMat);
+        scene.add(particles);
         
-        // --- Animations- und Bewegungsschleife ---
+        // Uhr für Delta
+        const clock = new THREE.Clock();
+        let lastDeltaTime = performance.now();
+        
+        // Bewegungsupdate
         function updateMovement(deltaTime) {
             if (!mouseLocked) return;
-            
-            // Berechne Blickrichtungsvektoren aus Yaw/Pitch
-            const cosYaw = Math.cos(yaw);
-            const sinYaw = Math.sin(yaw);
-            const cosPitch = Math.cos(pitch);
-            const sinPitch = Math.sin(pitch);
-            
-            // Forward Vektor (in der XZ-Ebene, für horizontale Bewegung)
+            const speed = moveSpeed * deltaTime;
+            const cosYaw = Math.cos(yaw), sinYaw = Math.sin(yaw);
             forward.set(sinYaw, 0, cosYaw).normalize();
             right.set(cosYaw, 0, -sinYaw).normalize();
-            
-            let moveDelta = new THREE.Vector3(0, 0, 0);
-            let speed = moveSpeed * deltaTime;
-            
-            if (keyState.KeyW) moveDelta.add(forward);
-            if (keyState.KeyS) moveDelta.sub(forward);
-            if (keyState.KeyD) moveDelta.add(right);
-            if (keyState.KeyA) moveDelta.sub(right);
-            
-            // Normieren bei diagonaler Bewegung
-            if (moveDelta.length() > 0) moveDelta.normalize();
-            moveDelta.multiplyScalar(speed);
-            
-            // Bewegung mit Kollision ausführen
-            let newPos = playerPos.clone();
-            newPos = tryMove(moveDelta.x, moveDelta.z, newPos);
-            
-            // Bodenhaftung: Spieler sollte immer auf y = 1.6 bleiben, aber wenn er unter einen Block gerät? 
-            // Wir prüfen, ob unter den Füßen ein Block ist, sonst setze auf Boden? Aber hier ist alles flach plus Bäume.
-            // Falls wir in einen Block reinfallen (Y-Kollision verhindert Höhenänderung), ignorieren wir Y.
-            // Zusätzlich: Wenn Spieler über einem Block läuft, kein Problem. Für simple First-Person keine Gravitation nötig.
-            // Stelle sicher, dass Spieler nicht durch Blöcke am Boden sinkt.
-            const footCheckY = newPos.y - 0.9;
-            let grounded = false;
-            for (let block of blocks) {
-                if (Math.abs(newPos.x - block.x) < 0.8 && Math.abs(newPos.z - block.z) < 0.8) {
-                    if (footCheckY >= block.minY - 0.1 && footCheckY <= block.maxY + 0.2 && block.minY < newPos.y) {
-                        grounded = true;
-                        break;
-                    }
-                }
-            }
-            if (!grounded && newPos.y > 1.6) {
-                // leichte "Schwerkraft" falls über Abgrund? In unserer Welt gibt es keine Löcher, aber sicherheitshalber
-                newPos.y -= deltaTime * 2;
-                if (newPos.y < playerHeight) newPos.y = playerHeight;
-            } else if (!grounded && newPos.y < playerHeight) {
-                newPos.y = playerHeight;
-            }
-            
-            // final Kollision für Y (gegen Decke/Kopf)
-            if (playerCollidesWithBlocks(newPos.x, newPos.z, newPos.y + 0.2)) {
-                // Kopfstößt an
-                newPos.y = playerPos.y;
-            }
-            if (playerCollidesWithBlocks(newPos.x, newPos.z, newPos.y - 0.9)) {
-                // Füße stecken im Boden? Korrigiere nach oben
-                newPos.y = playerPos.y + 0.1;
-            }
-            
-            playerPos.copy(newPos);
+            let moveDir = new THREE.Vector3(0,0,0);
+            if (keyState.KeyW) moveDir.add(forward);
+            if (keyState.KeyS) moveDir.sub(forward);
+            if (keyState.KeyD) moveDir.add(right);
+            if (keyState.KeyA) moveDir.sub(right);
+            if (moveDir.length() > 0) moveDir.normalize();
+            const deltaX = moveDir.x * speed;
+            const deltaZ = moveDir.z * speed;
+            tryMove(deltaX, deltaZ, playerPos);
             camera.position.copy(playerPos);
-            
-            // Kamera Rotation anwenden (Euler)
             camera.rotation.order = 'YXZ';
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
         }
         
-        // Einfache Wolken- oder Partikel? nicht nötig aber für Atmosphäre einige fliegende Partikel (optional)
-        // Erstelle ein paar Schmetterlings-Effekte (kleine Punkte) - dekorativ
-        const particleCount = 300;
-        const particleGeometry = new THREE.BufferGeometry();
-        const particlePositions = new Float32Array(particleCount * 3);
-        for (let i = 0; i < particleCount; i++) {
-            particlePositions[i*3] = (Math.random() - 0.5) * 80;
-            particlePositions[i*3+1] = Math.random() * 8 + 1;
-            particlePositions[i*3+2] = (Math.random() - 0.5) * 70;
+        // Zusätzlich: Ein paar fliegende Schmetterlinge / kleine Orbs (einfache Würfel)
+        const orbCount = 60;
+        const orbs = [];
+        for (let i = 0; i < orbCount; i++) {
+            const size = 0.08;
+            const orbMat = new THREE.MeshStandardMaterial({ color: 0xffaa55, emissive: 0x442200 });
+            const orbMesh = new THREE.Mesh(new THREE.SphereGeometry(size, 6, 6), orbMat);
+            orbMesh.userData = {
+                speedX: (Math.random() - 0.5) * 1.5,
+                speedZ: (Math.random() - 0.5) * 1.5,
+                posX: (Math.random() - 0.5) * 40,
+                posZ: (Math.random() - 0.5) * 40,
+                posY: Math.random() * 4 + 1
+            };
+            orbMesh.position.set(orbMesh.userData.posX, orbMesh.userData.posY, orbMesh.userData.posZ);
+            orbMesh.castShadow = false;
+            scene.add(orbMesh);
+            orbs.push(orbMesh);
         }
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-        const particleMaterial = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08, transparent: true, opacity: 0.5 });
-        const particles = new THREE.Points(particleGeometry, particleMaterial);
-        scene.add(particles);
         
-        // Zusätzlich: einfache Gras-Pflanzen (kleine Stäbe) - nicht notwendig aber schöner
-        
-        // --- Animation Loop ---
+        // Animationsschleife
         let lastTime = performance.now();
-        
         function animate() {
             const now = performance.now();
             let delta = Math.min(0.033, (now - lastTime) / 1000);
@@ -565,32 +472,35 @@
             
             updateMovement(delta);
             
-            // Partikel langsam bewegen für Atmosphäre
-            particles.rotation.y += 0.002;
-            particles.rotation.x = Math.sin(Date.now() * 0.0005) * 0.1;
+            // Partikel und Orbs sanft bewegen
+            particles.rotation.y += 0.001;
+            particles.rotation.x = Math.sin(Date.now() * 0.0004) * 0.1;
+            backLight.intensity = 0.28 + Math.sin(Date.now() * 0.002) * 0.08;
             
-            // Kleine dynamische Lichter (bisschen magisch)
-            const time = Date.now() * 0.002;
-            backLight.intensity = 0.25 + Math.sin(time) * 0.1;
+            for (let orb of orbs) {
+                orb.userData.posX += orb.userData.speedX * delta;
+                orb.userData.posZ += orb.userData.speedZ * delta;
+                if (Math.abs(orb.userData.posX) > 32) orb.userData.speedX *= -1;
+                if (Math.abs(orb.userData.posZ) > 32) orb.userData.speedZ *= -1;
+                orb.position.x = orb.userData.posX;
+                orb.position.z = orb.userData.posZ;
+                orb.position.y = orb.userData.posY + Math.sin(Date.now() * 2.5 + orb.userData.posX) * 0.15;
+            }
             
-            // Kamera aktualisieren und rendern
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         }
         
-        // Event für Fenstergröße
-        window.addEventListener('resize', onWindowResize, false);
-        function onWindowResize() {
+        window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+        });
         
-        // Start
         animate();
         
-        // kleine Console Info
-        console.log('Minecraft-style Welt geladen! WASD + Maus');
+        // Kleiner Hilfetext in Konsole
+        console.log("Minecraft-Welt geladen! Klicke in die Welt, dann WASD + Maus. Startposition ist garantiert frei.");
     </script>
 </body>
 </html>
