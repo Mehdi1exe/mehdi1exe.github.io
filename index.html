@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Brawl Stars Style - Arena Shooter</title>
+    <title>BRAWL ARENA - Brawl Stars Style</title>
     <style>
         * {
             margin: 0;
@@ -13,755 +13,740 @@
         }
 
         body {
-            background: linear-gradient(145deg, #1a472a 0%, #0e2a1a 100%);
+            background: linear-gradient(135deg, #0b2f1f, #071a10);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Roboto', sans-serif;
+            font-family: 'Segoe UI', 'Poppins', system-ui, 'Roboto', sans-serif;
             padding: 20px;
         }
 
-        .game-container {
-            background: #2b5e2f;
-            border-radius: 48px;
+        /* Hauptcontainer */
+        .app-container {
+            background: #2b4829;
+            border-radius: 56px;
             padding: 20px;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.2);
         }
 
         canvas {
             display: block;
             margin: 0 auto;
-            border-radius: 28px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border-radius: 32px;
+            box-shadow: 0 8px 20px black;
             cursor: crosshair;
-            background-color: #5c9e3e;
+            background: #6fa84f;
         }
 
-        .info-panel {
+        /* Menü-Overlay (wird über Canvas gelegt) */
+        .menu-overlay {
+            position: relative;
+        }
+
+        .menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(14, 28, 18, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            margin-top: 18px;
-            margin-bottom: 8px;
-            padding: 10px 25px;
-            background: #1f3b24c9;
-            backdrop-filter: blur(8px);
-            border-radius: 60px;
-            color: #f9e7b3;
-            text-shadow: 2px 2px 0 #5a3e1a;
-            font-weight: bold;
+            justify-content: center;
+            z-index: 20;
+            padding: 20px;
+            overflow-y: auto;
+            color: #ffefc0;
+            text-shadow: 2px 2px 0 #3a2a1a;
         }
 
-        .stats {
+        .menu-screen h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, #fdcc8a, #ffaa33);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: none;
+            margin-bottom: 10px;
+        }
+
+        .character-grid {
             display: flex;
-            gap: 35px;
-            font-size: 1.6rem;
-            letter-spacing: 1px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0;
+            max-width: 900px;
         }
 
-        .stats span {
-            background: #00000066;
-            padding: 5px 18px;
-            border-radius: 40px;
-            display: inline-block;
+        .character-card {
+            background: #2a281bc9;
             backdrop-filter: blur(4px);
+            border-radius: 48px;
+            padding: 15px 12px;
+            width: 130px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #dba542;
+            box-shadow: 0 8px 0 #6b4c1a;
         }
 
-        .restart-btn {
-            background: #fdbb44;
-            border: none;
-            font-size: 1.3rem;
+        .character-card.locked {
+            opacity: 0.6;
+            filter: grayscale(0.5);
+            border-color: #6f6a5a;
+            cursor: not-allowed;
+        }
+
+        .character-card.selected {
+            background: #fdbb44cc;
+            border: 3px solid #ffec80;
+            box-shadow: 0 0 15px gold;
+            transform: scale(1.02);
+        }
+
+        .character-card .emoji {
+            font-size: 4rem;
+        }
+
+        .character-card .name {
             font-weight: bold;
-            padding: 8px 28px;
-            border-radius: 60px;
+            font-size: 1.2rem;
+        }
+
+        .character-card .stats {
+            font-size: 0.7rem;
+            background: #00000066;
+            border-radius: 40px;
+            padding: 4px;
+            margin-top: 6px;
+        }
+
+        .progress {
+            font-size: 0.7rem;
+            margin-top: 8px;
+            background: #0f2b1a;
+            border-radius: 50px;
+            padding: 4px;
+        }
+
+        .start-btn {
+            background: #f5a623;
+            border: none;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 12px 40px;
+            border-radius: 80px;
+            margin-top: 15px;
+            color: #2c2b1f;
+            box-shadow: 0 8px 0 #9b5e1a;
+            transition: 0.05s linear;
             cursor: pointer;
-            color: #2f2e1f;
-            transition: 0.1s linear;
-            box-shadow: 0 5px 0 #9b6a1a;
             font-family: inherit;
         }
 
-        .restart-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #9b6a1a;
+        .start-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #9b5e1a;
         }
 
-        .controls-hint {
+        .info-text {
             margin-top: 12px;
             background: #00000077;
+            border-radius: 60px;
             padding: 8px 18px;
-            border-radius: 40px;
             font-size: 0.85rem;
-            font-weight: 500;
+        }
+
+        /* Ergebnis-Popup */
+        .result-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #211f16e6;
+            backdrop-filter: blur(20px);
+            border-radius: 48px;
+            padding: 30px 40px;
             text-align: center;
-            color: #ffefb9;
-            backdrop-filter: blur(4px);
-            display: inline-block;
-            width: auto;
+            z-index: 30;
+            border: 2px solid gold;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
         }
 
-        .footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
+        .result-popup h2 {
+            font-size: 2.3rem;
         }
 
-        @media (max-width: 1100px) {
-            .stats span { font-size: 1.2rem; padding: 4px 12px; }
-            .restart-btn { font-size: 1.1rem; padding: 5px 20px; }
+        .result-popup button {
+            margin-top: 20px;
+            background: #ffaa44;
+            border: none;
+            font-size: 1.2rem;
+            padding: 8px 24px;
+            border-radius: 60px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .character-card { width: 110px; }
+            .character-card .emoji { font-size: 3rem; }
         }
     </style>
 </head>
 <body>
-<div>
-    <div class="game-container">
+<div class="app-container">
+    <div class="menu-overlay" style="position: relative; display: inline-block;">
         <canvas id="gameCanvas" width="1100" height="650" style="width:100%; height:auto; max-width:1100px; aspect-ratio:1100/650"></canvas>
-        <div class="info-panel">
-            <div class="stats">
-                <span>🏆 SCORE: <span id="scoreValue">0</span></span>
-                <span>❤️ LEBEN: <span id="healthValue">100</span>%</span>
+        
+        <!-- Hauptmenü -->
+        <div id="mainMenu" class="menu-screen">
+            <h1>⚡ BRAWL ARENA ⚡</h1>
+            <p style="margin-bottom: 5px;">Wähle deinen BRAWLER</p>
+            <div id="characterContainer" class="character-grid"></div>
+            <button id="startBattleBtn" class="start-btn">🔥 STARTE KAMPF 🔥</button>
+            <div class="info-text">
+                🏆 3 SIEGE mit einem Helden schalten den nächsten frei!<br>
+                🎮 WASD bewegen | Maus zielen + Linksklick schießen | Überlebe als Letzter!
             </div>
-            <button class="restart-btn" id="restartButton">⚡ NEUES SPIEL</button>
         </div>
-        <div class="footer">
-            <div class="controls-hint">
-                🎮 WASD → bewegen &nbsp;&nbsp;|&nbsp;&nbsp; 🖱️ MAUSKLICK (links) → SCHIESSEN &nbsp;&nbsp;|&nbsp;&nbsp; 💥 Gegner jagen dich!
-            </div>
-            <div class="controls-hint">
-                ⚡ Brawl-Stars Style | 2 Treffer pro Gegner
-            </div>
+
+        <!-- Ergebnis-Popup (Sieg/Niederlage) -->
+        <div id="resultPopup" class="result-popup hide">
+            <h2 id="resultTitle">⚔️ SIEG ⚔️</h2>
+            <p id="resultMessage">Du hast die Arena gemeistert!</p>
+            <button id="closeResultBtn">ZURÜCK ZUM MENÜ</button>
         </div>
     </div>
 </div>
 
 <script>
-    (function(){
-        // ----- CANVAS ELEMENTE -----
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    // ---------- CHARAKTERE (7 Brawler) ----------
+    const CHARACTERS = [
+        { id: 0, name: "SHELLY", emoji: "🤠", health: 100, speed: 320, damage: 38, cooldown: 420, color: "#F5A65B", projectileColor: "#FFB347", desc: "Schrotflinte" },
+        { id: 1, name: "COLT", emoji: "🔫", health: 88, speed: 340, damage: 32, cooldown: 380, color: "#C9AE5D", projectileColor: "#FFE55C", desc: "Schnellfeuer" },
+        { id: 2, name: "BULL", emoji: "🐂", health: 130, speed: 280, damage: 44, cooldown: 480, color: "#B55B3A", projectileColor: "#E07A3A", desc: "Panzer" },
+        { id: 3, name: "BROCK", emoji: "🚀", health: 92, speed: 300, damage: 48, cooldown: 550, color: "#DD7744", projectileColor: "#FF7F2A", desc: "Raketen" },
+        { id: 4, name: "LEON", emoji: "🍃", health: 85, speed: 360, damage: 36, cooldown: 400, color: "#6BCB77", projectileColor: "#9AE6B4", desc: "Assassine" },
+        { id: 5, name: "EMZ", emoji: "💄", health: 96, speed: 310, damage: 34, cooldown: 440, color: "#C8559B", projectileColor: "#E58EBF", desc: "Spray" },
+        { id: 6, name: "SPIKE", emoji: "🌵", health: 104, speed: 315, damage: 40, cooldown: 450, color: "#A9D651", projectileColor: "#D0F274", desc: "Kaktus" }
+    ];
+
+    // Fortschritt: Anzahl Siege pro Charakter (Index) -> localStorage
+    let winsPerCharacter = new Array(CHARACTERS.length).fill(0);
+    let unlockedCharacters = [true]; // erster ist frei, andere false
+    let currentSelectedCharId = 0;
+
+    // Spiel-Status
+    let gameMode = "menu"; // "menu" oder "playing"
+    let gameActive = false;
+    let animationId = null;
+    let gameLoopId = null;
+
+    // Canvas-Elemente
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const mainMenuDiv = document.getElementById('mainMenu');
+    const resultPopup = document.getElementById('resultPopup');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultMessage = document.getElementById('resultMessage');
+    const closeResultBtn = document.getElementById('closeResultBtn');
+
+    // ----- Spielvariablen (werden beim Start initialisiert) -----
+    let player = null;
+    let enemies = [];
+    let projectiles = [];
+    let score = 0; // Siege zählen nicht hier, sondern rundenergebnis
+    let lastShotTime = 0;
+    let lastTimestamp = 0;
+    let currentCharacter = null;
+
+    // Eingaben
+    const keys = { w: false, s: false, a: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+    let mouseX = canvas.width/2, mouseY = canvas.height/2;
+    
+    // Gegner Parameter
+    const ENEMY_BASE_HEALTH = 78;
+    const ENEMY_RADIUS = 22;
+    const ENEMY_SPEED = 155;
+    const ENEMY_DAMAGE = 14;
+    const INVINCIBLE_DURATION = 0.65;
+    let spawnAccumulator = 0;
+    const SPAWN_INTERVAL = 2.2;
+    const MAX_ENEMIES = 6;
+    
+    // Kampf-Ergebnis
+    let roundResult = null; // "win", "lose"
+
+    // ----- Hilfsfunktionen für Speicherung -----
+    function loadProgress() {
+        const stored = localStorage.getItem('brawlWinsArray');
+        if(stored) {
+            try{
+                let arr = JSON.parse(stored);
+                if(arr.length === CHARACTERS.length) winsPerCharacter = arr;
+            }catch(e){}
+        }
+        // unlocked berechnen: Charakter 0 immer unlocked; Charakter i unlocked wenn winsPerCharacter[i-1] >= 3 (für i>=1)
+        for(let i=1; i<CHARACTERS.length; i++) {
+            if(winsPerCharacter[i-1] >= 3) unlockedCharacters[i] = true;
+            else unlockedCharacters[i] = false;
+        }
+        // falls wins schon 3 für letzten, alle danach unlocked
+        for(let i=1; i<CHARACTERS.length; i++) {
+            if(unlockedCharacters[i-1] && winsPerCharacter[i-1] >= 3) unlockedCharacters[i] = true;
+        }
+        // Sicherstellen mindestens erster unlocked
+        unlockedCharacters[0] = true;
+    }
+
+    function saveProgress() {
+        localStorage.setItem('brawlWinsArray', JSON.stringify(winsPerCharacter));
+        // danach unlocked neu berechnen
+        for(let i=1; i<CHARACTERS.length; i++) {
+            if(winsPerCharacter[i-1] >= 3) unlockedCharacters[i] = true;
+        }
+    }
+
+    // Sieg für aktuell ausgewählten Charakter hinzufügen (nach gewonnener Runde)
+    function addWinToCurrentCharacter() {
+        if(currentSelectedCharId !== undefined && currentSelectedCharId >=0) {
+            winsPerCharacter[currentSelectedCharId]++;
+            saveProgress();
+            // Prüfen ob dadurch neue Charaktere freigeschaltet werden
+            if(currentSelectedCharId+1 < CHARACTERS.length && winsPerCharacter[currentSelectedCharId] >= 3) {
+                unlockedCharacters[currentSelectedCharId+1] = true;
+            }
+            // auch rekursive freischaltung? maximal nächster
+            renderCharacterSelection();
+        }
+    }
+
+    // ----- Rendering des Charakter-Menüs -----
+    function renderCharacterSelection() {
+        const container = document.getElementById('characterContainer');
+        if(!container) return;
+        container.innerHTML = '';
+        for(let i=0; i<CHARACTERS.length; i++) {
+            const ch = CHARACTERS[i];
+            const unlocked = unlockedCharacters[i];
+            const wins = winsPerCharacter[i];
+            const needed = 3;
+            const remaining = Math.max(0, needed - wins);
+            const card = document.createElement('div');
+            card.className = `character-card ${!unlocked ? 'locked' : ''} ${currentSelectedCharId === i ? 'selected' : ''}`;
+            if(unlocked) {
+                card.onclick = () => {
+                    if(gameMode === "menu") {
+                        currentSelectedCharId = i;
+                        renderCharacterSelection();
+                    }
+                };
+            } else {
+                card.onclick = null;
+            }
+            card.innerHTML = `
+                <div class="emoji">${ch.emoji}</div>
+                <div class="name">${ch.name}</div>
+                <div class="stats">❤️ ${ch.health} | ⚡${ch.speed} | 💥${ch.damage}</div>
+                <div class="progress">${unlocked ? (wins>=3 ? "🏆 FREIGESCHALTET" : `🏅 ${wins}/3 Siege` ) : `🔒 ${remaining} Siege nötig`}</div>
+            `;
+            container.appendChild(card);
+        }
+    }
+
+    // ----- Spielinitialisierung (Start der Runde)-----
+    function startBattle() {
+        if(!unlockedCharacters[currentSelectedCharId]) {
+            alert("Dieser Held ist noch nicht freigeschaltet!");
+            return;
+        }
+        gameMode = "playing";
+        mainMenuDiv.classList.add('hide');
+        resultPopup.classList.add('hide');
+        gameActive = true;
+        roundResult = null;
         
-        // ----- SPIELPARAMETER -----
-        let gameActive = true;
-        let animationId = null;
-        
-        // Spieler
-        const PLAYER_MAX_HEALTH = 100;
-        let player = {
+        // Charakterdaten übernehmen
+        currentCharacter = { ...CHARACTERS[currentSelectedCharId] };
+        // Spieler erstellen
+        player = {
             x: canvas.width/2,
             y: canvas.height/2,
             radius: 20,
-            health: PLAYER_MAX_HEALTH,
-            speed: 330,        // Pixel pro Sekunde
-            invincibleUntil: 0, // timestamp (ms)
-            knockback: { x: 0, y: 0 }   // temporärer Rückstoß
+            health: currentCharacter.health,
+            maxHealth: currentCharacter.health,
+            speed: currentCharacter.speed,
+            damage: currentCharacter.damage,
+            cooldown: currentCharacter.cooldown,
+            invincibleUntil: 0,
+            knockback: { x: 0, y: 0 }
         };
         
-        // Dynamische Arrays
-        let enemies = [];
-        let projectiles = [];
+        // Gegner & Projektile leeren
+        enemies = [];
+        projectiles = [];
+        lastShotTime = performance.now();
+        spawnAccumulator = 0;
         
-        // Spielstatistiken
-        let score = 0;
-        let highScore = localStorage.getItem('brawlStarsHigh') ? parseInt(localStorage.getItem('brawlStarsHigh')) : 0;
+        // 4 Startgegner
+        for(let i=0; i<4; i++) {
+            spawnEnemyInBattle();
+        }
         
-        // Mausposition (für Schussrichtung & visuelle Drehung)
-        let mouseX = canvas.width/2;
-        let mouseY = canvas.height/2;
-        let mouseInside = true;
+        // Mausposition zurücksetzen
+        mouseX = player.x;
+        mouseY = player.y;
+    }
+    
+    function spawnEnemyInBattle() {
+        let side = Math.floor(Math.random() * 4);
+        let x, y;
+        const pad = 45;
+        if(side === 0){ x = Math.random() * (canvas.width-2*pad)+pad; y = -ENEMY_RADIUS; }
+        else if(side === 2){ x = Math.random() * (canvas.width-2*pad)+pad; y = canvas.height+ENEMY_RADIUS; }
+        else if(side === 1){ x = canvas.width+ENEMY_RADIUS; y = Math.random()*(canvas.height-2*pad)+pad; }
+        else { x = -ENEMY_RADIUS; y = Math.random()*(canvas.height-2*pad)+pad; }
+        x = Math.min(Math.max(x, ENEMY_RADIUS), canvas.width - ENEMY_RADIUS);
+        y = Math.min(Math.max(y, ENEMY_RADIUS), canvas.height - ENEMY_RADIUS);
+        // Vermeide zu nah am Spieler
+        let dx = x - player.x, dy = y - player.y;
+        if(Math.hypot(dx,dy) < 130) {
+            x = Math.min(Math.max(x + (dx>0?80:-80), ENEMY_RADIUS), canvas.width-ENEMY_RADIUS);
+            y = Math.min(Math.max(y + (dy>0?80:-80), ENEMY_RADIUS), canvas.height-ENEMY_RADIUS);
+        }
+        enemies.push({
+            x:x, y:y, radius: ENEMY_RADIUS, health: ENEMY_BASE_HEALTH, maxHealth: ENEMY_BASE_HEALTH
+        });
+    }
+    
+    // Schuss
+    function shootProjectile(now) {
+        if(!gameActive) return false;
+        if(now - lastShotTime < currentCharacter.cooldown) return false;
+        let dirX = mouseX - player.x;
+        let dirY = mouseY - player.y;
+        let len = Math.hypot(dirX, dirY);
+        if(len<0.001) { dirX=1; len=1; }
+        dirX /= len; dirY /= len;
+        projectiles.push({
+            x: player.x, y: player.y, radius: 8, vx: dirX * 780, vy: dirY * 780,
+            damage: currentCharacter.damage, life: true, createdAt: now
+        });
+        lastShotTime = now;
+        return true;
+    }
+    
+    function damagePlayer(amount, now) {
+        if(!gameActive) return;
+        if(now < player.invincibleUntil) return;
+        player.health -= amount;
+        if(player.health <= 0) {
+            player.health = 0;
+            gameActive = false;
+            roundResult = "lose";
+        }
+        player.invincibleUntil = now + (INVINCIBLE_DURATION * 1000);
+    }
+    
+    // Update Movement & Kollisionen
+    function updateBattle(deltaSec, now) {
+        if(!gameActive) return;
+        // Bewegung
+        let moveX=0, moveY=0;
+        if(keys.w || keys.ArrowUp) moveY-=1;
+        if(keys.s || keys.ArrowDown) moveY+=1;
+        if(keys.a || keys.ArrowLeft) moveX-=1;
+        if(keys.d || keys.ArrowRight) moveX+=1;
+        if(moveX!==0 || moveY!==0) {
+            let len = Math.hypot(moveX,moveY);
+            moveX/=len; moveY/=len;
+            player.x += moveX * player.speed * deltaSec;
+            player.y += moveY * player.speed * deltaSec;
+        }
+        if(player.knockback.x !==0 || player.knockback.y !==0) {
+            player.x += player.knockback.x * deltaSec;
+            player.y += player.knockback.y * deltaSec;
+            player.knockback.x *= 0.85;
+            player.knockback.y *= 0.85;
+            if(Math.abs(player.knockback.x)<3 && Math.abs(player.knockback.y)<3) player.knockback = {x:0,y:0};
+        }
+        player.x = Math.min(Math.max(player.x, player.radius), canvas.width - player.radius);
+        player.y = Math.min(Math.max(player.y, player.radius), canvas.height - player.radius);
         
-        // Schuss-Cooldown
-        let lastShotTime = 0;
-        const SHOT_COOLDOWN_MS = 380;   // ähnlich Brawl Stars (0.38 Sekunden)
-        const PROJECTILE_SPEED = 750;    // Pixel/Sek
-        const PROJECTILE_RADIUS = 8;
-        const PROJECTILE_DAMAGE = 38;     // Gegner HP sind 75 -> 2 Treffer (75 -> 2*38=76)
-        
-        // Gegner Stats
-        const ENEMY_BASE_HEALTH = 75;
-        const ENEMY_RADIUS = 22;
-        const ENEMY_SPEED = 155;          // etwas langsamer als Spieler
-        const ENEMY_DAMAGE = 14;           // Schaden pro Kollision
-        const INVINCIBLE_DURATION = 0.65;  // Sekunden unverwundbar nach Treffer
-        
-        // Spawn-Management
-        let spawnAccumulator = 0;
-        const SPAWN_DELAY = 1.7;           // Sekunden zwischen Spawns
-        const MAX_ENEMIES = 9;
-        
-        // Eingabezustände (Tastatur)
-        const keys = {
-            ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
-            w: false, s: false, a: false, d: false
-        };
-        
-        // Hilfsvariablen für DeltaTime
-        let lastTimestamp = 0;
-        
-        // ----- INITIALE GEGNER (3 Stück) -----
-        function spawnEnemy(avoidPlayer = true) {
-            if (!gameActive && enemies.length > 10) return;
-            let side = Math.floor(Math.random() * 4);
-            let x, y;
-            const padding = 45;
-            if (side === 0) { // oben
-                x = Math.random() * (canvas.width - 2*padding) + padding;
-                y = -ENEMY_RADIUS;
-            } else if (side === 2) { // unten
-                x = Math.random() * (canvas.width - 2*padding) + padding;
-                y = canvas.height + ENEMY_RADIUS;
-            } else if (side === 1) { // rechts
-                x = canvas.width + ENEMY_RADIUS;
-                y = Math.random() * (canvas.height - 2*padding) + padding;
-            } else {
-                x = -ENEMY_RADIUS;
-                y = Math.random() * (canvas.height - 2*padding) + padding;
+        // Gegner KI
+        for(let e of enemies) {
+            let dx = player.x - e.x, dy = player.y - e.y;
+            let dist = Math.hypot(dx,dy);
+            if(dist>0.01) {
+                let move = ENEMY_SPEED * deltaSec;
+                e.x += (dx/dist)*move;
+                e.y += (dy/dist)*move;
             }
-            
-            // Grenzen abfangen falls außerhalb => in gültigen Bereich korrigieren
-            x = Math.min(Math.max(x, ENEMY_RADIUS), canvas.width - ENEMY_RADIUS);
-            y = Math.min(Math.max(y, ENEMY_RADIUS), canvas.height - ENEMY_RADIUS);
-            
-            // Vermeide zu nahes Spawnen am Spieler
-            if (avoidPlayer) {
-                let dx = x - player.x;
-                let dy = y - player.y;
-                let dist = Math.hypot(dx, dy);
-                if (dist < 150) {
-                    x = Math.min(Math.max(x + (dx > 0 ? 100 : -100), ENEMY_RADIUS), canvas.width - ENEMY_RADIUS);
-                    y = Math.min(Math.max(y + (dy > 0 ? 100 : -100), ENEMY_RADIUS), canvas.height - ENEMY_RADIUS);
+            e.x = Math.min(Math.max(e.x, e.radius), canvas.width - e.radius);
+            e.y = Math.min(Math.max(e.y, e.radius), canvas.height - e.radius);
+        }
+        // Gegner untereinander
+        for(let i=0;i<enemies.length;i++) {
+            for(let j=i+1;j<enemies.length;j++) {
+                let a=enemies[i], b=enemies[j];
+                let dx=a.x-b.x, dy=a.y-b.y, dist=Math.hypot(dx,dy);
+                let minD=a.radius+b.radius;
+                if(dist<minD){
+                    let angle=Math.atan2(dy,dx), overlap=minD-dist;
+                    let pushX=Math.cos(angle)*overlap*0.5, pushY=Math.sin(angle)*overlap*0.5;
+                    a.x+=pushX; a.y+=pushY; b.x-=pushX; b.y-=pushY;
+                    a.x=Math.min(Math.max(a.x,a.radius),canvas.width-a.radius);
+                    a.y=Math.min(Math.max(a.y,a.radius),canvas.height-a.radius);
+                    b.x=Math.min(Math.max(b.x,b.radius),canvas.width-b.radius);
+                    b.y=Math.min(Math.max(b.y,b.radius),canvas.height-b.radius);
                 }
             }
-            
-            enemies.push({
-                x: x,
-                y: y,
-                radius: ENEMY_RADIUS,
-                health: ENEMY_BASE_HEALTH,
-                maxHealth: ENEMY_BASE_HEALTH
-            });
         }
-        
-        // ----- SPIEL ZURÜCKSETZEN -----
-        function resetGame() {
-            gameActive = true;
-            // Spieler zurücksetzen
-            player = {
-                x: canvas.width/2,
-                y: canvas.height/2,
-                radius: 20,
-                health: PLAYER_MAX_HEALTH,
-                speed: 330,
-                invincibleUntil: 0,
-                knockback: { x: 0, y: 0 }
-            };
-            // Leere Arrays
-            enemies = [];
-            projectiles = [];
-            score = 0;
-            updateScoreUI();
-            updateHealthUI();
-            
-            lastShotTime = performance.now();
-            spawnAccumulator = 0;
-            
-            // 3 Startgegner
-            for(let i = 0; i < 3; i++) {
-                spawnEnemy(true);
-            }
-            
-            // Mausposition wieder zentrieren
-            mouseX = player.x;
-            mouseY = player.y;
-        }
-        
-        // ----- UI AKTUALISIEREN -----
-        function updateScoreUI() {
-            document.getElementById('scoreValue').innerText = score;
-            if(score > highScore) {
-                highScore = score;
-                localStorage.setItem('brawlStarsHigh', highScore);
+        // Spieler vs Gegner Kollision + Schaden
+        for(let e of enemies) {
+            let dx=player.x-e.x, dy=player.y-e.y, dist=Math.hypot(dx,dy);
+            let minD=player.radius+e.radius;
+            if(dist<minD){
+                let angle=Math.atan2(dy,dx), overlap=minD-dist;
+                player.x+=Math.cos(angle)*overlap;
+                player.y+=Math.sin(angle)*overlap;
+                player.knockback.x+=Math.cos(angle)*220;
+                player.knockback.y+=Math.sin(angle)*220;
+                damagePlayer(ENEMY_DAMAGE, now);
+                if(player.health<=0) gameActive=false;
+                e.x-=Math.cos(angle)*(overlap+5);
+                e.y-=Math.sin(angle)*(overlap+5);
+                e.x=Math.min(Math.max(e.x,e.radius),canvas.width-e.radius);
+                e.y=Math.min(Math.max(e.y,e.radius),canvas.height-e.radius);
             }
         }
-        
-        function updateHealthUI() {
-            let percent = Math.max(0, (player.health / PLAYER_MAX_HEALTH) * 100);
-            document.getElementById('healthValue').innerText = Math.floor(percent);
+        // Projektile
+        for(let i=0;i<projectiles.length;i++){
+            let p=projectiles[i];
+            p.x+=p.vx*deltaSec;
+            p.y+=p.vy*deltaSec;
+            if(p.x+p.radius<0 || p.x-p.radius>canvas.width || p.y+p.radius<0 || p.y-p.radius>canvas.height){
+                projectiles.splice(i,1); i--; continue;
+            }
         }
-        
-        // ----- PROJEKTIL FEUERN (in Mausrichtung)-----
-        function shootProjectile(now) {
-            if (!gameActive) return false;
-            if (now - lastShotTime < SHOT_COOLDOWN_MS) return false;
-            
-            // Richtungsvektor zur Maus
-            let dirX = mouseX - player.x;
-            let dirY = mouseY - player.y;
-            let length = Math.hypot(dirX, dirY);
-            if (length < 0.001) {
-                dirX = 1; dirY = 0;
-                length = 1;
-            }
-            dirX /= length;
-            dirY /= length;
-            
-            projectiles.push({
-                x: player.x,
-                y: player.y,
-                radius: PROJECTILE_RADIUS,
-                vx: dirX * PROJECTILE_SPEED,
-                vy: dirY * PROJECTILE_SPEED,
-                damage: PROJECTILE_DAMAGE,
-                life: true,
-                createdAt: now
-            });
-            
-            lastShotTime = now;
-            return true;
-        }
-        
-        // ----- SPIELER SCHADEN (mit Invincibility-Frames)-----
-        function damagePlayer(amount, now) {
-            if (!gameActive) return;
-            if (now < player.invincibleUntil) return;
-            player.health -= amount;
-            if (player.health <= 0) {
-                player.health = 0;
-                gameActive = false;
-                updateHealthUI();
-                return;
-            }
-            player.invincibleUntil = now + (INVINCIBLE_DURATION * 1000);
-            updateHealthUI();
-        }
-        
-        // ----- Kollisionen & Bewegungen mit DeltaTime (Sekunden)-----
-        function updateMovement(deltaSec, now) {
-            if (!gameActive) return;
-            
-            // 1. Spieler-Bewegung (Tasten)
-            let moveX = 0, moveY = 0;
-            if (keys.w || keys.ArrowUp) moveY -= 1;
-            if (keys.s || keys.ArrowDown) moveY += 1;
-            if (keys.a || keys.ArrowLeft) moveX -= 1;
-            if (keys.d || keys.ArrowRight) moveX += 1;
-            
-            if (moveX !== 0 || moveY !== 0) {
-                let len = Math.hypot(moveX, moveY);
-                moveX /= len;
-                moveY /= len;
-                player.x += moveX * player.speed * deltaSec;
-                player.y += moveY * player.speed * deltaSec;
-            }
-            
-            // Knockback (falls vorhanden)
-            if (player.knockback.x !== 0 || player.knockback.y !== 0) {
-                player.x += player.knockback.x * deltaSec;
-                player.y += player.knockback.y * deltaSec;
-                // verlangsamen
-                player.knockback.x *= 0.85;
-                player.knockback.y *= 0.85;
-                if (Math.abs(player.knockback.x) < 5 && Math.abs(player.knockback.y) < 5) {
-                    player.knockback.x = 0;
-                    player.knockback.y = 0;
-                }
-            }
-            
-            // Spieler Grenzen
-            player.x = Math.min(Math.max(player.x, player.radius), canvas.width - player.radius);
-            player.y = Math.min(Math.max(player.y, player.radius), canvas.height - player.radius);
-            
-            // 2. Gegner KI & Bewegung
-            for (let i = 0; i < enemies.length; i++) {
-                const e = enemies[i];
-                let dx = player.x - e.x;
-                let dy = player.y - e.y;
-                let dist = Math.hypot(dx, dy);
-                if (dist > 0.01) {
-                    let move = ENEMY_SPEED * deltaSec;
-                    e.x += (dx / dist) * move;
-                    e.y += (dy / dist) * move;
-                }
-                // Gegner Randbegrenzung
-                e.x = Math.min(Math.max(e.x, e.radius), canvas.width - e.radius);
-                e.y = Math.min(Math.max(e.y, e.radius), canvas.height - e.radius);
-            }
-            
-            // 3. Gegner - Gegner Kollision (verhindert Überlappung)
-            for (let i = 0; i < enemies.length; i++) {
-                for (let j = i+1; j < enemies.length; j++) {
-                    const a = enemies[i];
-                    const b = enemies[j];
-                    const dx = a.x - b.x;
-                    const dy = a.y - b.y;
-                    const dist = Math.hypot(dx, dy);
-                    const minDist = a.radius + b.radius;
-                    if (dist < minDist) {
-                        const angle = Math.atan2(dy, dx);
-                        const overlap = minDist - dist;
-                        const pushX = Math.cos(angle) * overlap * 0.5;
-                        const pushY = Math.sin(angle) * overlap * 0.5;
-                        a.x += pushX;
-                        a.y += pushY;
-                        b.x -= pushX;
-                        b.y -= pushY;
-                        // Korrektur der Grenzen
-                        a.x = Math.min(Math.max(a.x, a.radius), canvas.width - a.radius);
-                        a.y = Math.min(Math.max(a.y, a.radius), canvas.height - a.radius);
-                        b.x = Math.min(Math.max(b.x, b.radius), canvas.width - b.radius);
-                        b.y = Math.min(Math.max(b.y, b.radius), canvas.height - b.radius);
+        // Projektil vs Gegner
+        for(let i=0;i<projectiles.length;i++){
+            let p=projectiles[i];
+            let hit=false;
+            for(let j=0;j<enemies.length;j++){
+                let e=enemies[j];
+                if(Math.hypot(p.x-e.x, p.y-e.y) < p.radius+e.radius){
+                    e.health -= p.damage;
+                    hit=true;
+                    if(e.health<=0){
+                        enemies.splice(j,1);
                     }
+                    break;
                 }
             }
-            
-            // 4. Spieler vs Gegner Kollision + Schaden + Rückstoß
-            for (let i = 0; i < enemies.length; i++) {
-                const e = enemies[i];
-                const dx = player.x - e.x;
-                const dy = player.y - e.y;
-                const dist = Math.hypot(dx, dy);
-                const minDist = player.radius + e.radius;
-                if (dist < minDist) {
-                    // Rückstoß für den Spieler
-                    const angle = Math.atan2(dy, dx);
-                    const overlap = minDist - dist;
-                    const pushX = Math.cos(angle) * overlap;
-                    const pushY = Math.sin(angle) * overlap;
-                    player.x += pushX;
-                    player.y += pushY;
-                    // Zusätzlicher Knockback für Dynamik
-                    const knockStr = 280;
-                    player.knockback.x += Math.cos(angle) * knockStr;
-                    player.knockback.y += Math.sin(angle) * knockStr;
-                    
-                    // Schaden zufügen (Invincibility wird abgefragt)
-                    damagePlayer(ENEMY_DAMAGE, now);
-                    if (player.health <= 0) gameActive = false;
-                    
-                    // Gegner kurz zurückdrücken
-                    e.x -= Math.cos(angle) * (overlap + 4);
-                    e.y -= Math.sin(angle) * (overlap + 4);
-                    e.x = Math.min(Math.max(e.x, e.radius), canvas.width - e.radius);
-                    e.y = Math.min(Math.max(e.y, e.radius), canvas.height - e.radius);
-                }
-            }
-            
-            // 5. Projektile Bewegung
-            for (let i = 0; i < projectiles.length; i++) {
-                const p = projectiles[i];
-                p.x += p.vx * deltaSec;
-                p.y += p.vy * deltaSec;
-                // Entfernen wenn außerhalb
-                if (p.x + p.radius < 0 || p.x - p.radius > canvas.width || p.y + p.radius < 0 || p.y - p.radius > canvas.height) {
-                    projectiles.splice(i,1);
-                    i--;
-                    continue;
-                }
-            }
-            
-            // 6. Projektil vs Gegner Kollision
-            for (let i = 0; i < projectiles.length; i++) {
-                const p = projectiles[i];
-                let hit = false;
-                for (let j = 0; j < enemies.length; j++) {
-                    const e = enemies[j];
-                    const dx = p.x - e.x;
-                    const dy = p.y - e.y;
-                    const dist = Math.hypot(dx, dy);
-                    if (dist < p.radius + e.radius) {
-                        e.health -= p.damage;
-                        hit = true;
-                        if (e.health <= 0) {
-                            enemies.splice(j,1);
-                            score++;
-                            updateScoreUI();
-                        }
-                        break;
-                    }
-                }
-                if (hit) {
-                    projectiles.splice(i,1);
-                    i--;
-                }
+            if(hit){
+                projectiles.splice(i,1);
+                i--;
             }
         }
-        
-        // ----- Gegner Spawn (zeitbasiert)-----
-        function updateSpawning(deltaSec) {
-            if (!gameActive) return;
-            if (enemies.length < MAX_ENEMIES) {
-                spawnAccumulator += deltaSec;
-                if (spawnAccumulator >= SPAWN_DELAY) {
-                    spawnEnemy(true);
-                    spawnAccumulator = 0;
-                    // falls immer noch zuwenig und weit unter max: doppelspawn möglich zur Not
-                    if (enemies.length < MAX_ENEMIES - 1 && spawnAccumulator > SPAWN_DELAY*0.7) {
-                        // nicht zu heftig
-                    }
-                }
-            } else {
+        // Spawn Gegner
+        if(enemies.length < MAX_ENEMIES && gameActive){
+            spawnAccumulator += deltaSec;
+            if(spawnAccumulator >= SPAWN_INTERVAL){
+                spawnEnemyInBattle();
                 spawnAccumulator = 0;
             }
-        }
+        } else spawnAccumulator=0;
         
-        // ----- GAME OVER ZEICHNUNG + NEUSTART BUTTON LOGIK -----
-        function drawGameOverlay() {
-            if (!gameActive) {
-                ctx.fillStyle = "rgba(0,0,0,0.75)";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.font = "bold 44px 'Segoe UI', system-ui";
-                ctx.fillStyle = "#ffbc6e";
-                ctx.shadowBlur = 0;
-                ctx.textAlign = "center";
-                ctx.fillText("🔥 GAME OVER 🔥", canvas.width/2, canvas.height/2 - 40);
-                ctx.font = "28px system-ui";
-                ctx.fillStyle = "#f9e0a0";
-                ctx.fillText("Klicke auf NEUSTART", canvas.width/2, canvas.height/2 + 45);
-                ctx.font = "22px monospace";
-                ctx.fillStyle = "#ddd8b0";
-                ctx.fillText("Highscore: " + highScore, canvas.width/2, canvas.height/2 + 110);
-                ctx.textAlign = "left";
-            }
+        // Siegprüfung: keine Gegner mehr
+        if(enemies.length === 0 && gameActive){
+            gameActive = false;
+            roundResult = "win";
         }
-        
-        // ----- GRAFIK (Brawl Stars inspiriert)-----
-        function draw() {
-            if (!ctx) return;
-            // Hintergrund - gras texture (Raster)
-            ctx.fillStyle = "#5fa83d";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // Gras-Streu-Muster
-            ctx.strokeStyle = "#79c753";
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i < 300; i++) {
-                ctx.beginPath();
-                let rx = (i * 131) % canvas.width;
-                let ry = (i * 253) % canvas.height;
-                ctx.moveTo(rx, ry);
-                ctx.lineTo(rx+6, ry-8);
-                ctx.stroke();
-            }
-            // Schatten-Effekt (weicher Boden)
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = "rgba(0,0,0,0.3)";
-            
-            // ----- Gegner zeichnen (Bösewichte mit Gesundheitsbalken)-----
-            for (let e of enemies) {
-                // Körper
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radius-2, 0, Math.PI*2);
-                ctx.fillStyle = "#c53a1f";
-                ctx.fill();
-                ctx.shadowBlur = 4;
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radius-4, 0, Math.PI*2);
-                ctx.fillStyle = "#e05a3a";
-                ctx.fill();
-                // wütende Augen
-                ctx.fillStyle = "#ffffff";
-                ctx.beginPath();
-                ctx.arc(e.x-8, e.y-6, 5, 0, Math.PI*2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(e.x+8, e.y-6, 5, 0, Math.PI*2);
-                ctx.fill();
-                ctx.fillStyle = "#1f1a14";
-                ctx.beginPath();
-                ctx.arc(e.x-7, e.y-7, 2.2, 0, Math.PI*2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(e.x+9, e.y-7, 2.2, 0, Math.PI*2);
-                ctx.fill();
-                // Augenbrauen böse
-                ctx.beginPath();
-                ctx.moveTo(e.x-13, e.y-12);
-                ctx.lineTo(e.x-3, e.y-10);
-                ctx.lineTo(e.x-7, e.y-8);
-                ctx.fillStyle = "#2f1a0e";
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(e.x+15, e.y-12);
-                ctx.lineTo(e.x+5, e.y-10);
-                ctx.lineTo(e.x+9, e.y-8);
-                ctx.fill();
-                
-                // Gesundheitsbalken
-                const healthPercent = e.health / e.maxHealth;
-                const barWidth = e.radius * 1.6;
-                const barHeight = 6;
-                const barX = e.x - barWidth/2;
-                const barY = e.y - e.radius - 8;
-                ctx.fillStyle = "#631c0c";
-                ctx.fillRect(barX, barY, barWidth, barHeight);
-                ctx.fillStyle = "#eeaa44";
-                ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-            }
-            
-            // ----- Spieler zeichnen (Brawl Stars - Held)-----
-            ctx.shadowBlur = 6;
-            // Hauptkörper
+        if(player.health <= 0){
+            gameActive = false;
+            roundResult = "lose";
+        }
+    }
+    
+    // Zeichnung Spiel (während Kampf)
+    function drawBattle() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "#68b84c";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        // Muster
+        ctx.strokeStyle = "#89dd66";
+        for(let i=0;i<200;i++){
             ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius-1, 0, Math.PI*2);
-            ctx.fillStyle = "#50c8f0";
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius-4, 0, Math.PI*2);
-            ctx.fillStyle = "#7ad0ff";
-            ctx.fill();
-            // Gesicht: coole Brille + Richtung zur Maus
-            let angleToMouse = Math.atan2(mouseY - player.y, mouseX - player.x);
-            let eyeOffset = 8;
-            let eyeX1 = player.x + Math.cos(angleToMouse - 0.5) * 8;
-            let eyeY1 = player.y + Math.sin(angleToMouse - 0.5) * 6;
-            let eyeX2 = player.x + Math.cos(angleToMouse + 0.5) * 8;
-            let eyeY2 = player.y + Math.sin(angleToMouse + 0.5) * 6;
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(eyeX1, eyeY1, 4.5, 0, Math.PI*2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(eyeX2, eyeY2, 4.5, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillStyle = "#103644";
-            ctx.beginPath();
-            ctx.arc(eyeX1+1, eyeY1-1, 2, 0, Math.PI*2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(eyeX2+1, eyeY2-1, 2, 0, Math.PI*2);
-            ctx.fill();
-            // Lächeln
-            ctx.beginPath();
-            ctx.arc(player.x+2, player.y+6, 7, 0.05, Math.PI - 0.05);
-            ctx.strokeStyle = "#4a2a1a";
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
-            
-            // Healthbalken Spieler (oben)
-            const playerHealthPercent = player.health / PLAYER_MAX_HEALTH;
-            const pBarWidth = player.radius * 2.2;
-            const pBarHeight = 8;
-            const pBarX = player.x - pBarWidth/2;
-            const pBarY = player.y - player.radius - 10;
-            ctx.fillStyle = "#421010";
-            ctx.fillRect(pBarX, pBarY, pBarWidth, pBarHeight);
-            ctx.fillStyle = "#ff6262";
-            ctx.fillRect(pBarX, pBarY, pBarWidth * playerHealthPercent, pBarHeight);
-            
-            // ----- Projektile (Energiekugeln)-----
-            for (let p of projectiles) {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius-2, 0, Math.PI*2);
-                ctx.fillStyle = "#FFE484";
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius-4, 0, Math.PI*2);
-                ctx.fillStyle = "#ffb347";
-                ctx.fill();
-            }
-            
-            ctx.shadowBlur = 0;
-            // kleine Punkte Effekte
-            if (gameActive && (performance.now() * 0.005) % 300 < 100) {
-                // nichts
-            }
+            let rx = (i*173)%canvas.width, ry = (i*257)%canvas.height;
+            ctx.moveTo(rx,ry); ctx.lineTo(rx+5, ry-7); ctx.stroke();
         }
-        
-        // ----- GAME LOOP mit DeltaTime-----
-        let lastFrameTime = 0;
-        function gameLoop(nowMs) {
-            if (!lastFrameTime) lastFrameTime = nowMs;
-            let delta = Math.min(0.033, (nowMs - lastFrameTime) / 1000);
-            if (delta <= 0) {
-                lastFrameTime = nowMs;
-                requestAnimationFrame(gameLoop);
-                return;
-            }
-            lastFrameTime = nowMs;
-            
-            if (gameActive) {
-                updateMovement(delta, nowMs);
-                updateSpawning(delta);
-                // Wenn Spieler tot, gameActive wird false durch damagePlayer
-                if (player.health <= 0) {
-                    gameActive = false;
-                }
-            }
-            
-            // Zeichnen
-            draw();
-            if (!gameActive) drawGameOverlay();
-            
-            requestAnimationFrame(gameLoop);
+        // Gegner
+        for(let e of enemies){
+            ctx.shadowBlur=5;
+            ctx.beginPath(); ctx.arc(e.x,e.y,e.radius-2,0,Math.PI*2); ctx.fillStyle="#cd4c2c"; ctx.fill();
+            ctx.beginPath(); ctx.arc(e.x,e.y,e.radius-5,0,Math.PI*2); ctx.fillStyle="#e27c58"; ctx.fill();
+            ctx.fillStyle="white";
+            ctx.beginPath(); ctx.arc(e.x-7,e.y-6,4,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(e.x+7,e.y-6,4,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle="#3a241a"; ctx.beginPath(); ctx.arc(e.x-6,e.y-7,2,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(e.x+8,e.y-7,2,0,Math.PI*2); ctx.fill();
+            let hpPercent = e.health/e.maxHealth;
+            ctx.fillStyle="#631c0c"; ctx.fillRect(e.x-18, e.y-e.radius-8, 36, 6);
+            ctx.fillStyle="#f7b05e"; ctx.fillRect(e.x-18, e.y-e.radius-8, 36*hpPercent, 6);
         }
-        
-        // ----- EVENT LISTENER (Tastatur & Maus)-----
-        function handleKeyDown(e) {
-            let key = e.key;
-            if (keys.hasOwnProperty(key)) keys[key] = true;
-            // Verhindere Scrollen mit Pfeiltasten / WASD
-            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight' ||
-                key === 'w' || key === 's' || key === 'a' || key === 'd') {
-                e.preventDefault();
+        // Spieler
+        ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.arc(player.x,player.y,player.radius-1,0,Math.PI*2); ctx.fillStyle=currentCharacter.color; ctx.fill();
+        ctx.beginPath(); ctx.arc(player.x,player.y,player.radius-4,0,Math.PI*2); ctx.fillStyle="#FFDD99"; ctx.fill();
+        let angleM=Math.atan2(mouseY-player.y, mouseX-player.x);
+        let eyeX1=player.x+Math.cos(angleM-0.5)*7, eyeY1=player.y+Math.sin(angleM-0.5)*5;
+        let eyeX2=player.x+Math.cos(angleM+0.5)*7, eyeY2=player.y+Math.sin(angleM+0.5)*5;
+        ctx.fillStyle="white"; ctx.beginPath(); ctx.arc(eyeX1,eyeY1,4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(eyeX2,eyeY2,4,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="#2f2b1f"; ctx.beginPath(); ctx.arc(eyeX1+1,eyeY1-1,2,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(eyeX2+1,eyeY2-1,2,0,Math.PI*2); ctx.fill();
+        // Healthbalken
+        let hpPercentP = player.health/player.maxHealth;
+        ctx.fillStyle="#631010"; ctx.fillRect(player.x-24, player.y-player.radius-12, 48, 8);
+        ctx.fillStyle="#ff6e6e"; ctx.fillRect(player.x-24, player.y-player.radius-12, 48*hpPercentP, 8);
+        // Projektil
+        for(let p of projectiles){
+            ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fillStyle=currentCharacter.projectileColor; ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fillStyle="#ffda88"; ctx.fill();
+        }
+        ctx.shadowBlur=0;
+    }
+    
+    // Ergebnis anzeigen & zurück zum Menü
+    function endRound() {
+        if(roundResult === "win") {
+            resultTitle.innerText = "🏆 SIEG! 🏆";
+            resultMessage.innerText = `Du hast die Arena erobert! +1 Sieg für ${CHARACTERS[currentSelectedCharId].name}`;
+            addWinToCurrentCharacter();
+        } else {
+            resultTitle.innerText = "💀 NIEDERLAGE 💀";
+            resultMessage.innerText = "Du wurdest besiegt. Versuche es noch einmal!";
+        }
+        resultPopup.classList.remove('hide');
+        gameMode = "menu";
+        gameActive = false;
+        // Zeichne Menü neu
+        renderCharacterSelection();
+        mainMenuDiv.classList.remove('hide');
+        if(animationId) cancelAnimationFrame(animationId);
+        startMenuDrawLoop(); // einfache Schleife für Hintergrund (Menü anzeigen)
+    }
+    
+    // Zeichnet Menü-Hintergrund (nur Grafik)
+    function drawMenuBackground() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "#3d7642";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.font = "bold 28px system-ui";
+        ctx.fillStyle = "#ffefb0";
+        ctx.shadowBlur=0;
+        ctx.fillText("⚡ BRAWL ARENA", canvas.width/2-120, 70);
+        ctx.font = "18px system-ui";
+        ctx.fillStyle = "#d9e68c";
+        ctx.fillText("Wähle deinen Helden im Menü", canvas.width/2-130, 130);
+    }
+    
+    let menuDrawId = null;
+    function startMenuDrawLoop() {
+        if(menuDrawId) cancelAnimationFrame(menuDrawId);
+        function drawLoop() {
+            if(gameMode === "menu") {
+                drawMenuBackground();
+                menuDrawId = requestAnimationFrame(drawLoop);
+            } else {
+                if(menuDrawId) cancelAnimationFrame(menuDrawId);
             }
         }
-        
-        function handleKeyUp(e) {
-            let key = e.key;
-            if (keys.hasOwnProperty(key)) keys[key] = false;
+        drawLoop();
+    }
+    
+    // Game-Loop für aktiven Kampf
+    let lastFrame = 0;
+    function battleLoop(nowMs) {
+        if(gameMode !== "playing") return;
+        if(!lastFrame) { lastFrame = nowMs; requestAnimationFrame(battleLoop); return; }
+        let delta = Math.min(0.033, (nowMs - lastFrame)/1000);
+        if(delta<=0.01) { lastFrame = nowMs; requestAnimationFrame(battleLoop); return; }
+        lastFrame = nowMs;
+        if(gameActive) {
+            updateBattle(delta, nowMs);
         }
-        
-        function handleMouseMove(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let canvasX = (e.clientX - rect.left) * scaleX;
-            let canvasY = (e.clientY - rect.top) * scaleY;
-            canvasX = Math.min(Math.max(canvasX, 0), canvas.width);
-            canvasY = Math.min(Math.max(canvasY, 0), canvas.height);
-            mouseX = canvasX;
-            mouseY = canvasY;
+        drawBattle();
+        if(roundResult !== null && gameMode === "playing") {
+            endRound();
+            return;
         }
-        
-        function handleMouseClick(e) {
-            if (e.button !== 0) return;
-            e.preventDefault();
-            const now = performance.now();
-            if (gameActive) {
-                shootProjectile(now);
-            }
-        }
-        
-        // Verhindert Kontextmenü auf Canvas
-        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('mousedown', handleMouseClick);
-        
-        // Neustart Button
-        const restartBtn = document.getElementById('restartButton');
-        restartBtn.addEventListener('click', () => {
-            resetGame();
-            gameActive = true;
-            // alle timestamps zurücksetzen
-            lastShotTime = performance.now();
-            spawnAccumulator = 0;
-            player.invincibleUntil = 0;
-            player.health = PLAYER_MAX_HEALTH;
-            updateHealthUI();
-            updateScoreUI();
+        requestAnimationFrame(battleLoop);
+    }
+    
+    // Events für Maus & Tastatur
+    function setupEventListeners() {
+        window.addEventListener('keydown', (e) => {
+            let k = e.key.toLowerCase();
+            if(keys.hasOwnProperty(k)) keys[k]=true;
+            if(k === 'arrowup' || k === 'arrowdown' || k === 'arrowleft' || k === 'arrowright' ||
+               k === 'w' || k === 's' || k === 'a' || k === 'd') e.preventDefault();
         });
-        
-        // Spiel initialisieren
-        resetGame();
-        updateScoreUI();
-        updateHealthUI();
-        
-        // Starte Loop
-        requestAnimationFrame(gameLoop);
-    })();
+        window.addEventListener('keyup', (e) => {
+            let k = e.key.toLowerCase();
+            if(keys.hasOwnProperty(k)) keys[k]=false;
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width/rect.width, sy = canvas.height/rect.height;
+            let cx = (e.clientX - rect.left)*sx, cy = (e.clientY - rect.top)*sy;
+            mouseX = Math.min(Math.max(cx,0), canvas.width);
+            mouseY = Math.min(Math.max(cy,0), canvas.height);
+        });
+        canvas.addEventListener('mousedown', (e) => {
+            if(e.button !== 0) return;
+            e.preventDefault();
+            if(gameMode === "playing" && gameActive) {
+                shootProjectile(performance.now());
+            }
+        });
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.getElementById('startBattleBtn').addEventListener('click', () => {
+            if(gameMode === "menu") {
+                startBattle();
+                lastFrame = 0;
+                requestAnimationFrame(battleLoop);
+            }
+        });
+        closeResultBtn.addEventListener('click', () => {
+            resultPopup.classList.add('hide');
+            mainMenuDiv.classList.remove('hide');
+            gameMode = "menu";
+            renderCharacterSelection();
+            startMenuDrawLoop();
+        });
+    }
+    
+    // Initialisierung
+    function init() {
+        loadProgress();
+        renderCharacterSelection();
+        setupEventListeners();
+        startMenuDrawLoop();
+    }
+    init();
 </script>
 </body>
 </html>
