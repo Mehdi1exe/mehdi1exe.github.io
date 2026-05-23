@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BRAWL STARS - Team Arena | Charaktere freischalten</title>
+    <title>BRAWL STARS - Team Arena | Echte Charaktere</title>
     <style>
         * {
             margin: 0;
@@ -38,13 +38,12 @@
             background-color: #6ca842;
         }
 
-        /* Menü Overlay */
         .menu-screen {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 900px;
+            width: 950px;
             max-width: 90vw;
             background: #1e2c18ea;
             backdrop-filter: blur(16px);
@@ -99,7 +98,7 @@
         }
 
         .brawler-icon {
-            font-size: 3.5rem;
+            font-size: 3.2rem;
         }
 
         .brawler-name {
@@ -194,16 +193,14 @@
     </div>
 </div>
 
-<!-- Hauptmenü -->
 <div id="mainMenu" class="menu-screen">
     <h1>⚡ BRAWL STARS ARENA ⚡</h1>
-    <p>Wähle deinen BRAWLER (3 Siege schalten nächsten frei)</p>
+    <p>Wähle deinen BRAWLER (3 Siege = nächster Held)</p>
     <div id="brawlerList" class="brawler-grid"></div>
     <button id="startMatchBtn" class="start-btn">🔥 STARTE KAMPF 🔥</button>
     <div style="margin-top: 12px; font-size:0.8rem;">🎮 WASD bewegen | Maus zielen + Linksklick schießen | Besiege alle 3 Gegner!</div>
 </div>
 
-<!-- Ergebnis Popup -->
 <div id="resultPopup" class="result-popup hide">
     <h2 id="resultTitle">🏆 SIEG</h2>
     <p id="resultMessage">Fantastisch! +1 Sieg</p>
@@ -212,36 +209,33 @@
 
 <script>
     (function(){
-        // ---------- 7 BRAWLER (mit individuellen Werten & Schussarten) ----------
+        // ---------- 7 BRAWLER (mit individuellen Farben & Accessoires) ----------
         const BRAWLERS = [
-            { id:0, name:"SHELLY",   hp:100, speed:285, dmg:34,  projCount:4, spread:0.5, range:420, cooldown:530, color:"#E08E3A", eyeColor:"#4A2A1A", hat:"⭐" },
-            { id:1, name:"COLT",     hp:88,  speed:325, dmg:28,  projCount:1, spread:0,   range:540, cooldown:370, color:"#C9AE5D", eyeColor:"#3A2E1F", hat:"🤠" },
-            { id:2, name:"BULL",     hp:135, speed:250, dmg:40,  projCount:3, spread:0.45, range:330, cooldown:620, color:"#B55B3A", eyeColor:"#4A2512", hat:"🐂" },
-            { id:3, name:"BROCK",    hp:94,  speed:295, dmg:50,  projCount:1, spread:0,   range:590, cooldown:710, color:"#DD7744", eyeColor:"#5C2E14", hat:"🚀" },
-            { id:4, name:"LEON",     hp:82,  speed:350, dmg:32,  projCount:2, spread:0.2, range:480, cooldown:430, color:"#6BCB77", eyeColor:"#265C2E", hat:"🍃" },
-            { id:5, name:"EMZ",      hp:96,  speed:310, dmg:28,  projCount:5, spread:0.6, range:390, cooldown:510, color:"#C8559B", eyeColor:"#4A1E3A", hat:"💄" },
-            { id:6, name:"SPIKE",    hp:108, speed:305, dmg:36,  projCount:6, spread:0.7, range:440, cooldown:570, color:"#A9D651", eyeColor:"#3A5C1A", hat:"🌵" }
+            { id:0, name:"SHELLY",   hp:100, speed:285, dmg:34,  projCount:4, spread:0.5, range:420, cooldown:530, color:"#E08E3A", secColor:"#C56A2A", hat:"🤠", eyeColor:"#4A2A1A" },
+            { id:1, name:"COLT",     hp:88,  speed:325, dmg:28,  projCount:1, spread:0,   range:540, cooldown:370, color:"#C9AE5D", secColor:"#A88E3A", hat:"⭐", eyeColor:"#3A2E1F" },
+            { id:2, name:"BULL",     hp:135, speed:250, dmg:40,  projCount:3, spread:0.45, range:330, cooldown:620, color:"#B55B3A", secColor:"#8E3E1E", hat:"🐂", eyeColor:"#4A2512" },
+            { id:3, name:"BROCK",    hp:94,  speed:295, dmg:50,  projCount:1, spread:0,   range:590, cooldown:710, color:"#DD7744", secColor:"#B5552A", hat:"🚀", eyeColor:"#5C2E14" },
+            { id:4, name:"LEON",     hp:82,  speed:350, dmg:32,  projCount:2, spread:0.2, range:480, cooldown:430, color:"#6BCB77", secColor:"#48A552", hat:"🍃", eyeColor:"#265C2E" },
+            { id:5, name:"EMZ",      hp:96,  speed:310, dmg:28,  projCount:5, spread:0.6, range:390, cooldown:510, color:"#C8559B", secColor:"#A23474", hat:"💄", eyeColor:"#4A1E3A" },
+            { id:6, name:"SPIKE",    hp:108, speed:305, dmg:36,  projCount:6, spread:0.7, range:440, cooldown:570, color:"#A9D651", secColor:"#82B530", hat:"🌵", eyeColor:"#3A5C1A" }
         ];
 
-        // Fortschritt: Siege pro Brawler
+        // Fortschritt
         let winsPerBrawler = new Array(BRAWLERS.length).fill(0);
-        let unlocked = [true];  // Shelly frei
+        let unlocked = [true];
         for(let i=1;i<BRAWLERS.length;i++) unlocked[i]=false;
         let currentBrawlerId = 0;
         
-        // Lade aus localStorage
         try{
-            let saved = localStorage.getItem("brawlStarsWins");
+            let saved = localStorage.getItem("brawlStarsWinsFinal");
             if(saved){
                 let arr = JSON.parse(saved);
                 if(arr.length===BRAWLERS.length) winsPerBrawler = arr;
-                for(let i=1;i<BRAWLERS.length;i++){
-                    if(winsPerBrawler[i-1] >= 3) unlocked[i]=true;
-                }
+                for(let i=1;i<BRAWLERS.length;i++) if(winsPerBrawler[i-1] >= 3) unlocked[i]=true;
             }
-        }catch(e){}
+        } catch(e){}
 
-        // DOM-Elemente
+        // DOM
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const mainMenu = document.getElementById('mainMenu');
@@ -256,28 +250,25 @@
         const enemyCountSpan = document.getElementById('enemyCountUI');
         const totalWinsSpan = document.getElementById('totalWinsUI');
 
-        // --- Weltgröße & Kollisionen ---
+        // Welt & Karte
         const MAP_W = 2400;
         const MAP_H = 1600;
         let camera = { x:0, y:0 };
-        
-        // Hindernisse (Felsen / Büsche)
         let obstacles = [];
+        
         function buildMap(){
             obstacles = [];
-            for(let i=0;i<22;i++){
-                let x = 400 + Math.random() * 1600;
-                let y = 300 + Math.random() * 1100;
-                obstacles.push({ x:x, y:y, radius: 22 });
+            for(let i=0;i<24;i++){
+                let x = 300 + Math.random() * 1800;
+                let y = 200 + Math.random() * 1200;
+                obstacles.push({ x:x, y:y, radius: 24 });
             }
-            // spezielle Wände
-            obstacles.push({ x: 1800, y: 1200, radius: 32 });
-            obstacles.push({ x: 550, y: 1350, radius: 28 });
-            obstacles.push({ x: 1200, y: 750, radius: 30 });
+            obstacles.push({ x: 1800, y: 1300, radius: 30 });
+            obstacles.push({ x: 600, y: 1400, radius: 28 });
+            obstacles.push({ x: 1200, y: 800, radius: 32 });
         }
         buildMap();
         
-        // Kollision mit Hindernissen
         function collideWithMap(entity, radius){
             for(let obs of obstacles){
                 let dx = entity.x - obs.x;
@@ -295,28 +286,23 @@
             entity.y = Math.min(Math.max(entity.y, radius+15), MAP_H - radius-15);
         }
         
-        // --- Spielzustand ---
+        // Spielvariablen
         let matchActive = false;
         let player = null;
-        let allies = [];    // 2 Team-Bots
-        let enemies = [];   // 3 Gegner-Bots
+        let allies = [];
+        let enemies = [];
         let projectiles = [];
         let lastFrame = 0;
         let lastShotTime = 0;
         let winCounter = 0;
-        
-        // Maus (Weltkoordinaten)
         let mouseWorld = { x: MAP_W/2, y: MAP_H/2 };
         
-        // Tasten
         const keys = { w:false, s:false, a:false, d:false, ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
         
-        // --- Hilfsfunktionen ---
+        // Speichern & Freischaltung
         function saveWins(){
-            localStorage.setItem("brawlStarsWins", JSON.stringify(winsPerBrawler));
-            for(let i=1;i<BRAWLERS.length;i++){
-                if(winsPerBrawler[i-1] >= 3) unlocked[i] = true;
-            }
+            localStorage.setItem("brawlStarsWinsFinal", JSON.stringify(winsPerBrawler));
+            for(let i=1;i<BRAWLERS.length;i++) if(winsPerBrawler[i-1] >= 3) unlocked[i]=true;
             renderMenu();
         }
         
@@ -325,7 +311,6 @@
             winCounter = winsPerBrawler[currentBrawlerId];
             totalWinsSpan.innerText = winCounter;
             saveWins();
-            // Prüfe Freischaltung
             if(currentBrawlerId+1 < BRAWLERS.length && winsPerBrawler[currentBrawlerId] >= 3 && !unlocked[currentBrawlerId+1]){
                 unlocked[currentBrawlerId+1] = true;
                 alert(`✨ NEUER BRAWLER: ${BRAWLERS[currentBrawlerId+1].name} freigeschaltet! ✨`);
@@ -333,7 +318,7 @@
             }
         }
         
-        // Bot erstellen (Team oder Gegner)
+        // Bots erstellen
         function createBot(isAlly, brawlerData, x, y){
             return {
                 x, y, radius: 20,
@@ -347,14 +332,14 @@
             };
         }
         
-        // Gegner spawnen auf der anderen Seite der Map (relativ zum Team)
+        // Gegner spawnen auf der anderen Seite der Karte
         function spawnOpponents(teamCenterX, teamCenterY){
             let enemiesList = [];
             let side = (teamCenterX < MAP_W/2) ? "right" : "left";
             let baseX = (side === "right") ? MAP_W - 450 : 450;
             let baseY = teamCenterY + (Math.random() - 0.5)*200;
             baseY = Math.min(Math.max(baseY, 200), MAP_H-200);
-            let brawlerIndices = [1,3,5]; // Colt, Brock, Emz als Gegner
+            let brawlerIndices = [1,3,5];
             for(let i=0;i<3;i++){
                 let bData = BRAWLERS[brawlerIndices[i % brawlerIndices.length]];
                 let xOff = (i-1)*110;
@@ -364,10 +349,9 @@
             return enemiesList;
         }
         
-        // Team-Bots (Verbündete)
         function spawnAllies(centerX, centerY){
             let alliesList = [];
-            let allyBrawlers = [BRAWLERS[0], BRAWLERS[2]]; // Shelly, Bull
+            let allyBrawlers = [BRAWLERS[0], BRAWLERS[2]];
             for(let i=0;i<2;i++){
                 let offX = (i===0? -70 : 70);
                 let ally = createBot(true, allyBrawlers[i], centerX + offX, centerY - 30);
@@ -376,11 +360,9 @@
             return alliesList;
         }
         
-        // Spiel zurücksetzen (Match starten)
         function startMatch(){
             matchActive = true;
             let brawler = BRAWLERS[currentBrawlerId];
-            // Spieler startet etwas links/rechts der Mitte
             let startX = MAP_W/2 - 180;
             let startY = MAP_H/2;
             player = {
@@ -392,9 +374,7 @@
                 invincibleUntil: 0,
                 knockback: {x:0,y:0}
             };
-            // Team Bots
             allies = spawnAllies(player.x, player.y);
-            // Gegner auf der anderen Seite
             enemies = spawnOpponents(player.x, player.y);
             projectiles = [];
             lastShotTime = performance.now();
@@ -402,7 +382,6 @@
             updateUI();
         }
         
-        // Kamera folgt Spieler
         function updateCamera(){
             if(!player) return;
             camera.x = player.x - canvas.width/2;
@@ -419,7 +398,7 @@
             totalWinsSpan.innerText = winsPerBrawler[currentBrawlerId];
         }
         
-        // Schuss vom Spieler
+        // Schießen
         function playerShoot(now){
             if(!matchActive || player.health<=0) return false;
             let cd = player.brawler.cooldown;
@@ -443,18 +422,17 @@
                     vx: dirX * 780, vy: dirY * 780,
                     damage: b.dmg,
                     isPlayer: true,
-                    owner: player,
-                    range: b.range
+                    owner: player
                 });
             }
             lastShotTime = now;
             return true;
         }
         
-        // Bot-KI (bewegt sich und schießt NUR wenn Gegner in Reichweite)
+        // Bot KI (bewegt sich immer, schießt nur in Reichweite)
         function updateBot(bot, delta, now, enemiesList, alliesList, playerUnit){
             if(bot.health<=0) return;
-            // Ziel finden (nächster Feind)
+            // Nächsten Feind suchen
             let opponents = bot.isAlly ? enemiesList : [playerUnit, ...alliesList];
             let closest = null;
             let minDist2 = Infinity;
@@ -470,15 +448,14 @@
                 let dx = closest.x - bot.x;
                 let dy = closest.y - bot.y;
                 let dist = Math.hypot(dx,dy);
-                if(dist>0.01){
+                if(dist > 0.01){
                     let move = bot.speed * delta;
                     bot.x += (dx/dist) * move;
                     bot.y += (dy/dist) * move;
                 }
-                // Schuss nur, wenn in Reichweite
+                // Angriff nur wenn im eigenen Range
                 let range = bot.brawler.range;
                 if(dist < range + 35 && (now - bot.lastShot) > bot.brawler.cooldown){
-                    // Schießen auf das Ziel
                     let dirX = closest.x - bot.x;
                     let dirY = closest.y - bot.y;
                     let len = Math.hypot(dirX,dirY);
@@ -498,8 +475,7 @@
                                 vx: dirX2 * 720, vy: dirY2 * 720,
                                 damage: bData.dmg,
                                 isPlayer: false,
-                                owner: bot,
-                                range: bData.range
+                                owner: bot
                             });
                         }
                         bot.lastShot = now;
@@ -518,7 +494,6 @@
             collideWithMap(bot, bot.radius);
         }
         
-        // Updates während des Matches
         function updateGame(delta, now){
             if(!matchActive) return;
             if(player.health <= 0){
@@ -548,7 +523,7 @@
             }
             collideWithMap(player, player.radius);
             
-            // Bots bewegen
+            // Aktualisiere Bots (alle bewegen sich)
             for(let i=0;i<allies.length;i++){
                 if(allies[i].health>0) updateBot(allies[i], delta, now, enemies, allies.filter(a=>a!==allies[i] && a.health>0), player);
                 else { allies.splice(i,1); i--; }
@@ -558,7 +533,7 @@
                 else { enemies.splice(i,1); i--; }
             }
             
-            // Kollision Spieler vs Gegner (Schaden + Rückstoß)
+            // Kollision Spieler vs Gegner (Schaden)
             for(let e of enemies){
                 if(e.health<=0) continue;
                 let dist = Math.hypot(player.x-e.x, player.y-e.y);
@@ -586,7 +561,6 @@
                 if(p.x<-300 || p.x>MAP_W+300 || p.y<-300 || p.y>MAP_H+300){
                     projectiles.splice(i,1); i--; continue;
                 }
-                // Hindernis-Kollision
                 let hitWall=false;
                 for(let obs of obstacles){
                     if(Math.hypot(p.x-obs.x, p.y-obs.y) < p.radius+obs.radius){
@@ -607,7 +581,6 @@
                         }
                     }
                 } else {
-                    // Gegnerisches Projektil
                     if(player.health>0 && Math.hypot(p.x-player.x, p.y-player.y) < p.radius+player.radius){
                         player.health -= p.damage;
                         hit=true;
@@ -626,7 +599,6 @@
                 if(hit){ projectiles.splice(i,1); i--; }
             }
             
-            // Siegprüfung
             if(enemies.length === 0 && matchActive){
                 matchActive = false;
                 addWinToCurrent();
@@ -647,64 +619,87 @@
             resultPopup.classList.remove("hide");
         }
         
-        // ---------- GRAFIK (Detaillierte Charaktere) ----------
-        function drawCharacter(x, y, charData, isPlayer, healthPercent){
-            // Körper
+        // ---------- GRAFIK (Detaillierte, farbige Charaktere) ----------
+        function drawCharacter(x, y, brawler, isPlayer, healthPercent){
+            // Schatten
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "rgba(0,0,0,0.4)";
+            // Hauptkörper
             ctx.beginPath();
             ctx.arc(x, y, 21, 0, Math.PI*2);
-            ctx.fillStyle = charData.color;
+            ctx.fillStyle = brawler.color;
             ctx.fill();
-            ctx.strokeStyle = "#3A281C";
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "#4A2E1A";
+            ctx.lineWidth = 1.8;
             ctx.stroke();
+            // Gesichtsfarbe (heller)
+            ctx.beginPath();
+            ctx.arc(x-3, y-3, 12, 0, Math.PI*2);
+            ctx.fillStyle = "#FFE0B5";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x+3, y-3, 12, 0, Math.PI*2);
+            ctx.fill();
             // Augen
-            ctx.fillStyle = "#FEF8E0";
+            ctx.fillStyle = "#FFFFFF";
             ctx.beginPath();
-            ctx.arc(x-8, y-5, 5, 0, Math.PI*2);
+            ctx.arc(x-9, y-7, 5, 0, Math.PI*2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(x+8, y-5, 5, 0, Math.PI*2);
+            ctx.arc(x+9, y-7, 5, 0, Math.PI*2);
             ctx.fill();
-            ctx.fillStyle = "#2F261A";
+            ctx.fillStyle = brawler.eyeColor;
             ctx.beginPath();
-            ctx.arc(x-7, y-6, 2.5, 0, Math.PI*2);
+            ctx.arc(x-8, y-8, 2.5, 0, Math.PI*2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(x+9, y-6, 2.5, 0, Math.PI*2);
+            ctx.arc(x+10, y-8, 2.5, 0, Math.PI*2);
             ctx.fill();
-            // Pupillen Richtung Maus (nur Spieler)
             if(isPlayer){
                 let angle = Math.atan2(mouseWorld.y - player.y, mouseWorld.x - player.x);
-                let offX1 = Math.cos(angle)*2.5;
-                let offY1 = Math.sin(angle)*2.2;
-                let offX2 = Math.cos(angle)*2.5;
-                let offY2 = Math.sin(angle)*2.2;
-                ctx.fillStyle = "#000";
-                ctx.beginPath(); ctx.arc(x-7+offX1, y-6+offY1, 1.8, 0, 2*Math.PI); ctx.fill();
-                ctx.beginPath(); ctx.arc(x+9+offX2, y-6+offY2, 1.8, 0, 2*Math.PI); ctx.fill();
+                let offX = Math.cos(angle)*1.8;
+                let offY = Math.sin(angle)*1.5;
+                ctx.fillStyle = "#000000";
+                ctx.beginPath(); ctx.arc(x-8+offX, y-8+offY, 1.4, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(x+10+offX, y-8+offY, 1.4, 0, 2*Math.PI); ctx.fill();
             } else {
-                ctx.fillStyle = "#1E1A12";
-                ctx.beginPath(); ctx.arc(x-7, y-6, 1.8,0,2*Math.PI); ctx.fill();
-                ctx.beginPath(); ctx.arc(x+9, y-6, 1.8,0,2*Math.PI); ctx.fill();
+                ctx.fillStyle = "#1A1A1A";
+                ctx.beginPath(); ctx.arc(x-8, y-8, 1.5, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(x+10, y-8, 1.5, 0, 2*Math.PI); ctx.fill();
             }
+            // Mund (cooles Lächeln)
+            ctx.beginPath();
+            ctx.arc(x, y+4, 8, 0.1, Math.PI - 0.1);
+            ctx.strokeStyle = "#6B3E1A";
+            ctx.lineWidth = 2;
+            ctx.stroke();
             // Hut / Accessoire
-            ctx.font = "24px sans-serif";
-            ctx.fillStyle = "#F5D742";
-            ctx.fillText(charData.hat, x-12, y-18);
+            ctx.font = "28px 'Segoe UI'";
+            ctx.fillStyle = "#F7C56E";
+            ctx.fillText(brawler.hat, x-14, y-23);
             // Gesundheitsbalken
-            ctx.fillStyle = "#631212";
-            ctx.fillRect(x-25, y-27, 50, 7);
-            ctx.fillStyle = "#F2644A";
-            ctx.fillRect(x-25, y-27, 50 * healthPercent, 7);
+            ctx.fillStyle = "#611c1c";
+            ctx.fillRect(x-28, y-35, 56, 7);
+            ctx.fillStyle = "#E65C3A";
+            ctx.fillRect(x-28, y-35, 56 * healthPercent, 7);
+            ctx.shadowBlur = 0;
         }
         
         function renderGame(){
-            if(!ctx) return;
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            // Hintergrund
-            ctx.fillStyle = "#7bbf4a";
+            ctx.fillStyle = "#8BC34A";
             ctx.fillRect(0,0,canvas.width,canvas.height);
-            // Map-Elemente
+            // Kräuter / Gras Muster
+            for(let i=0;i<200;i++){
+                ctx.beginPath();
+                let sx = (i*131)%canvas.width;
+                let sy = (i*253)%canvas.height;
+                ctx.moveTo(sx,sy);
+                ctx.lineTo(sx+5,sy-9);
+                ctx.strokeStyle = "#6E9F3E";
+                ctx.stroke();
+            }
+            // Hindernisse
             for(let obs of obstacles){
                 let scrX = obs.x - camera.x;
                 let scrY = obs.y - camera.y;
@@ -714,29 +709,34 @@
                 ctx.fillStyle = "#8B694C";
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(scrX-3, scrY-3, obs.radius-8, 0, 2*Math.PI);
-                ctx.fillStyle = "#B68B65";
+                ctx.arc(scrX-4, scrY-4, obs.radius-9, 0, 2*Math.PI);
+                ctx.fillStyle = "#B38B65";
                 ctx.fill();
             }
-            // Allies & Gegner
-            function drawEntity(e, isPl){
-                let scrX = e.x - camera.x;
-                let scrY = e.y - camera.y;
-                if(scrX+40<0 || scrX-40>canvas.width || scrY+40<0 || scrY-40>canvas.height) return;
-                let hpPercent = e.health/e.maxHealth;
-                drawCharacter(scrX, scrY, e.brawler, isPl, hpPercent);
+            // Verbündete
+            for(let a of allies) if(a.health>0){
+                let scr = { x: a.x - camera.x, y: a.y - camera.y };
+                if(scr.x+40>0 && scr.x-40<canvas.width && scr.y+40>0 && scr.y-40<canvas.height)
+                    drawCharacter(scr.x, scr.y, a.brawler, false, a.health/a.maxHealth);
             }
-            for(let a of allies) if(a.health>0) drawEntity(a, false);
-            for(let e of enemies) if(e.health>0) drawEntity(e, false);
-            if(player) drawEntity(player, true);
-            
+            // Gegner
+            for(let e of enemies) if(e.health>0){
+                let scr = { x: e.x - camera.x, y: e.y - camera.y };
+                if(scr.x+40>0 && scr.x-40<canvas.width && scr.y+40>0 && scr.y-40<canvas.height)
+                    drawCharacter(scr.x, scr.y, e.brawler, false, e.health/e.maxHealth);
+            }
+            // Spieler
+            if(player){
+                let scr = { x: player.x - camera.x, y: player.y - camera.y };
+                drawCharacter(scr.x, scr.y, player.brawler, true, player.health/player.maxHealth);
+            }
             // Projektile
             for(let p of projectiles){
                 let scrX = p.x - camera.x;
                 let scrY = p.y - camera.y;
                 ctx.beginPath();
                 ctx.arc(scrX, scrY, 6, 0, 2*Math.PI);
-                ctx.fillStyle = "#FFD966";
+                ctx.fillStyle = "#FFC857";
                 ctx.fill();
                 ctx.beginPath();
                 ctx.arc(scrX-1, scrY-1, 2.5, 0, 2*Math.PI);
@@ -744,10 +744,10 @@
                 ctx.fill();
             }
             if(!matchActive && player && player.health<=0){
-                ctx.font = "bold 42px system-ui";
-                ctx.fillStyle = "#FFCC88";
+                ctx.font = "bold 44px 'Segoe UI'";
+                ctx.fillStyle = "#FFDD88";
                 ctx.shadowBlur = 0;
-                ctx.fillText("GAME OVER", canvas.width/2-110, canvas.height/2);
+                ctx.fillText("💀 GAME OVER 💀", canvas.width/2-130, canvas.height/2);
             }
         }
         
@@ -768,13 +768,13 @@
                     <div class="brawler-icon">${b.hat}</div>
                     <div class="brawler-name">${b.name}</div>
                     <div class="brawler-stats">❤️${b.hp} ⚡${b.speed} 💥${b.dmg}</div>
-                    <div class="win-progress">${isUnlocked ? (wins>=3 ? "🏆 MASTER" : `🏅 ${wins}/3 Siege`) : "🔒 gesperrt"}</div>
+                    <div class="win-progress">${isUnlocked ? (wins>=3 ? "🏆 MEISTER" : `🏅 ${wins}/3 Siege`) : "🔒 3 Siege nötig"}</div>
                 `;
                 container.appendChild(card);
             }
         }
         
-        // --- Haupt-Loop ---
+        // --- Loop ---
         let lastTime = 0;
         function animate(nowMs){
             requestAnimationFrame(animate);
@@ -788,7 +788,7 @@
             renderGame();
         }
         
-        // --- Event Handling ---
+        // --- Events ---
         function worldMouseFromCanvas(e){
             const rect = canvas.getBoundingClientRect();
             const sx = canvas.width/rect.width;
@@ -836,7 +836,6 @@
             };
         }
         
-        // Start
         renderMenu();
         initEvents();
         animate(0);
