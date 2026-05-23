@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BRAWL STARS - Team Arena | Gefecht mit Sichtradius</title>
+    <title>BRAWL STARS - Team Arena | Charaktere freischalten</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
         }
 
         body {
-            background: linear-gradient(145deg, #0a1f12, #030c07);
+            background: linear-gradient(145deg, #0a2f1a, #041a0c);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,478 +22,523 @@
             padding: 20px;
         }
 
-        .game-wrapper {
-            background: #2c4424;
+        .game-container {
+            background: #2b4622;
             border-radius: 48px;
             padding: 16px;
-            box-shadow: 0 20px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 35px rgba(0,0,0,0.5);
         }
 
         canvas {
             display: block;
             margin: 0 auto;
             border-radius: 28px;
-            box-shadow: 0 0 0 3px #dba542, 0 12px 25px black;
+            box-shadow: 0 0 0 3px #e6b450, 0 12px 25px black;
             cursor: crosshair;
+            background-color: #6ca842;
         }
 
-        .info-bar {
+        /* Menü Overlay */
+        .menu-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 900px;
+            max-width: 90vw;
+            background: #1e2c18ea;
+            backdrop-filter: blur(16px);
+            border-radius: 48px;
+            padding: 25px;
+            text-align: center;
+            z-index: 100;
+            border: 2px solid #f5bc70;
+            box-shadow: 0 20px 40px black;
+            color: #ffefcf;
+        }
+
+        .menu-screen h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, #ffd966, #ffaa33);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .brawler-grid {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 15px 20px 8px 20px;
-            background: #1e2c18cc;
-            backdrop-filter: blur(8px);
-            border-radius: 60px;
-            padding: 8px 22px;
-            color: #ffefb0;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            margin: 25px 0;
+        }
+
+        .brawler-card {
+            background: #2c2a1ccc;
+            border-radius: 36px;
+            padding: 12px 10px;
+            width: 130px;
+            cursor: pointer;
+            transition: 0.1s linear;
+            border: 2px solid #c99242;
+        }
+
+        .brawler-card.locked {
+            opacity: 0.55;
+            filter: grayscale(0.6);
+            border-color: #6a5c44;
+            cursor: not-allowed;
+        }
+
+        .brawler-card.selected {
+            background: #ffc164cc;
+            border: 3px solid #ffec80;
+            transform: scale(1.02);
+            box-shadow: 0 0 12px gold;
+        }
+
+        .brawler-icon {
+            font-size: 3.5rem;
+        }
+
+        .brawler-name {
             font-weight: bold;
+            font-size: 1.2rem;
         }
 
-        .team-status {
-            display: flex;
-            gap: 25px;
-            font-size: 1.1rem;
+        .brawler-stats {
+            font-size: 0.7rem;
+            background: #00000077;
+            border-radius: 30px;
+            padding: 4px;
+            margin-top: 5px;
         }
 
-        .restart-btn {
-            background: #f0a445;
+        .win-progress {
+            font-size: 0.65rem;
+            margin-top: 6px;
+        }
+
+        .start-btn {
+            background: #f5a623;
             border: none;
-            padding: 6px 22px;
-            border-radius: 40px;
+            font-size: 1.8rem;
             font-weight: bold;
-            font-size: 1rem;
+            padding: 10px 35px;
+            border-radius: 60px;
+            margin: 10px 0;
+            color: #2c2b1f;
+            box-shadow: 0 7px 0 #9b5e1a;
             cursor: pointer;
             transition: 0.05s linear;
-            box-shadow: 0 4px 0 #8b551f;
-            font-family: inherit;
         }
 
-        .restart-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #8b551f;
+        .start-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 3px 0 #9b5e1a;
         }
 
-        .controls {
-            background: #00000099;
-            border-radius: 40px;
-            padding: 5px 15px;
-            font-size: 0.7rem;
+        .hide {
+            display: none;
+        }
+
+        .result-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #141e0eee;
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 30px 50px;
             text-align: center;
-            backdrop-filter: blur(4px);
+            z-index: 110;
+            border: 2px solid gold;
+            color: #ffefb0;
         }
 
-        @media (max-width: 1000px) {
-            .team-status { font-size: 0.9rem; gap: 12px; }
+        .result-popup button {
+            background: #f0b342;
+            border: none;
+            padding: 8px 30px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .ingame-ui {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 20px 0 20px;
+            background: #151f0fbb;
+            backdrop-filter: blur(5px);
+            border-radius: 60px;
+            padding: 6px 20px;
+            font-weight: bold;
+            color: #fff0bc;
         }
     </style>
 </head>
 <body>
-<div class="game-wrapper">
+<div class="game-container">
     <canvas id="gameCanvas" width="1200" height="700" style="width:100%; height:auto; max-width:1200px; aspect-ratio:1200/700"></canvas>
-    <div class="info-bar">
-        <div class="team-status">
-            <span>❤️ DU: <span id="playerHp">100</span>%</span>
-            <span>🤝 TEAM: <span id="teamAlive">2</span> / 2</span>
-            <span>👹 GEGNER: <span id="enemyAlive">3</span> / 3</span>
-            <span>🏆 SIEGE: <span id="winCount">0</span></span>
-        </div>
-        <button class="restart-btn" id="resetMatchBtn">⚔️ NEUES MATCH</button>
+    <div class="ingame-ui">
+        <span>❤️ LEBEN: <span id="playerHpUI">100</span>%</span>
+        <span>🤝 TEAM: <span id="teamCountUI">2</span> / 2</span>
+        <span>👹 GEGNER: <span id="enemyCountUI">3</span> / 3</span>
+        <span>🏆 SIEGE: <span id="totalWinsUI">0</span></span>
+        <button id="menuBackBtn" style="background:#d48f2b; border:none; border-radius:30px; padding:2px 12px; cursor:pointer;">🏠 MENÜ</button>
     </div>
-    <div class="controls" style="margin-top: 8px;">
-        🎮 WASD → Bewegen | 🖱️ MAUS = Zielen | 🔫 LINKSKLICK → Spezial-Angriff | 🌑 Sichtradius = 230px
-    </div>
+</div>
+
+<!-- Hauptmenü -->
+<div id="mainMenu" class="menu-screen">
+    <h1>⚡ BRAWL STARS ARENA ⚡</h1>
+    <p>Wähle deinen BRAWLER (3 Siege schalten nächsten frei)</p>
+    <div id="brawlerList" class="brawler-grid"></div>
+    <button id="startMatchBtn" class="start-btn">🔥 STARTE KAMPF 🔥</button>
+    <div style="margin-top: 12px; font-size:0.8rem;">🎮 WASD bewegen | Maus zielen + Linksklick schießen | Besiege alle 3 Gegner!</div>
+</div>
+
+<!-- Ergebnis Popup -->
+<div id="resultPopup" class="result-popup hide">
+    <h2 id="resultTitle">🏆 SIEG</h2>
+    <p id="resultMessage">Fantastisch! +1 Sieg</p>
+    <button id="closeResultBtn">WEITER ZUM MENÜ</button>
 </div>
 
 <script>
     (function(){
-        // ---------- BRAWLER-DATEN (7 Charaktere) ----------
+        // ---------- 7 BRAWLER (mit individuellen Werten & Schussarten) ----------
         const BRAWLERS = [
-            { id: 0, name: "SHELLY", emoji: "🤠", hp: 100, speed: 280, attackType: "shotgun", damage: 32, projectileCount: 4, spreadAngle: 0.5, range: 400, cooldown: 550, color: "#E08E3A", bulletColor: "#FFB347" },
-            { id: 1, name: "COLT", emoji: "🔫", hp: 88, speed: 320, attackType: "straight", damage: 28, projectileCount: 1, spreadAngle: 0, range: 520, cooldown: 380, color: "#C9AE5D", bulletColor: "#FFE484" },
-            { id: 2, name: "BULL", emoji: "🐂", hp: 135, speed: 250, attackType: "cone", damage: 38, projectileCount: 3, spreadAngle: 0.4, range: 320, cooldown: 620, color: "#B55B3A", bulletColor: "#E07A3A" },
-            { id: 3, name: "BROCK", emoji: "🚀", hp: 94, speed: 290, attackType: "explosive", damage: 48, projectileCount: 1, spreadAngle: 0, range: 580, cooldown: 700, color: "#DD7744", bulletColor: "#FF6F2C" },
-            { id: 4, name: "LEON", emoji: "🍃", hp: 82, speed: 350, attackType: "straight", damage: 30, projectileCount: 2, spreadAngle: 0.2, range: 470, cooldown: 440, color: "#6BCB77", bulletColor: "#9AE6B4" },
-            { id: 5, name: "EMZ", emoji: "💄", hp: 96, speed: 305, attackType: "shotgun", damage: 26, projectileCount: 5, spreadAngle: 0.6, range: 380, cooldown: 520, color: "#C8559B", bulletColor: "#E58EBF" },
-            { id: 6, name: "SPIKE", emoji: "🌵", hp: 108, speed: 300, attackType: "spread", damage: 34, projectileCount: 6, spreadAngle: 0.7, range: 430, cooldown: 580, color: "#A9D651", bulletColor: "#D0F274" }
+            { id:0, name:"SHELLY",   hp:100, speed:285, dmg:34,  projCount:4, spread:0.5, range:420, cooldown:530, color:"#E08E3A", eyeColor:"#4A2A1A", hat:"⭐" },
+            { id:1, name:"COLT",     hp:88,  speed:325, dmg:28,  projCount:1, spread:0,   range:540, cooldown:370, color:"#C9AE5D", eyeColor:"#3A2E1F", hat:"🤠" },
+            { id:2, name:"BULL",     hp:135, speed:250, dmg:40,  projCount:3, spread:0.45, range:330, cooldown:620, color:"#B55B3A", eyeColor:"#4A2512", hat:"🐂" },
+            { id:3, name:"BROCK",    hp:94,  speed:295, dmg:50,  projCount:1, spread:0,   range:590, cooldown:710, color:"#DD7744", eyeColor:"#5C2E14", hat:"🚀" },
+            { id:4, name:"LEON",     hp:82,  speed:350, dmg:32,  projCount:2, spread:0.2, range:480, cooldown:430, color:"#6BCB77", eyeColor:"#265C2E", hat:"🍃" },
+            { id:5, name:"EMZ",      hp:96,  speed:310, dmg:28,  projCount:5, spread:0.6, range:390, cooldown:510, color:"#C8559B", eyeColor:"#4A1E3A", hat:"💄" },
+            { id:6, name:"SPIKE",    hp:108, speed:305, dmg:36,  projCount:6, spread:0.7, range:440, cooldown:570, color:"#A9D651", eyeColor:"#3A5C1A", hat:"🌵" }
         ];
 
-        // Fortschritt: Siege pro Brawler (um neue freizuschalten)
+        // Fortschritt: Siege pro Brawler
         let winsPerBrawler = new Array(BRAWLERS.length).fill(0);
-        let unlocked = [true];
+        let unlocked = [true];  // Shelly frei
+        for(let i=1;i<BRAWLERS.length;i++) unlocked[i]=false;
         let currentBrawlerId = 0;
-        for(let i=1; i<BRAWLERS.length; i++) unlocked[i] = false;
         
-        // Lade gespeicherte Siege
-        try {
-            let saved = localStorage.getItem("brawlStarsTeamWins");
-            if(saved) {
+        // Lade aus localStorage
+        try{
+            let saved = localStorage.getItem("brawlStarsWins");
+            if(saved){
                 let arr = JSON.parse(saved);
-                if(arr.length === BRAWLERS.length) winsPerBrawler = arr;
-                for(let i=1;i<BRAWLERS.length;i++) {
-                    if(winsPerBrawler[i-1] >= 3) unlocked[i] = true;
+                if(arr.length===BRAWLERS.length) winsPerBrawler = arr;
+                for(let i=1;i<BRAWLERS.length;i++){
+                    if(winsPerBrawler[i-1] >= 3) unlocked[i]=true;
                 }
             }
-        } catch(e) {}
-        
-        // UI Elemente
+        }catch(e){}
+
+        // DOM-Elemente
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const playerHpSpan = document.getElementById('playerHp');
-        const teamAliveSpan = document.getElementById('teamAlive');
-        const enemyAliveSpan = document.getElementById('enemyAlive');
-        const winCountSpan = document.getElementById('winCount');
-        const resetBtn = document.getElementById('resetMatchBtn');
+        const mainMenu = document.getElementById('mainMenu');
+        const resultPopup = document.getElementById('resultPopup');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultMessage = document.getElementById('resultMessage');
+        const closeResultBtn = document.getElementById('closeResultBtn');
+        const startMatchBtn = document.getElementById('startMatchBtn');
+        const menuBackBtn = document.getElementById('menuBackBtn');
+        const playerHpSpan = document.getElementById('playerHpUI');
+        const teamCountSpan = document.getElementById('teamCountUI');
+        const enemyCountSpan = document.getElementById('enemyCountUI');
+        const totalWinsSpan = document.getElementById('totalWinsUI');
+
+        // --- Weltgröße & Kollisionen ---
+        const MAP_W = 2400;
+        const MAP_H = 1600;
+        let camera = { x:0, y:0 };
         
-        // Welt & Karte (mit Hindernissen - Brawl Stars Style)
-        const MAP_WIDTH = 2200;
-        const MAP_HEIGHT = 1600;
-        // Kamera folgt dem Spieler
-        let camera = { x: 0, y: 0 };
-        
-        // Sichtradius (Pixel)
-        const VISION_RADIUS = 240;
-        
-        // Hindernisse (Wände / Felsen)
-        const obstacles = [];
-        function buildMap() {
-            // Äußere Grenzen als unsichtbare Wände: wir behandeln mit clamp später
-            // Zentrale Felsgruppe
-            for(let i=0; i<18; i++) {
-                let x = 600 + Math.random() * 1000;
-                let y = 500 + Math.random() * 800;
-                obstacles.push({ x: x, y: y, radius: 22 });
+        // Hindernisse (Felsen / Büsche)
+        let obstacles = [];
+        function buildMap(){
+            obstacles = [];
+            for(let i=0;i<22;i++){
+                let x = 400 + Math.random() * 1600;
+                let y = 300 + Math.random() * 1100;
+                obstacles.push({ x:x, y:y, radius: 22 });
             }
-            // Ecken
-            obstacles.push({ x: 400, y: 300, radius: 30 });
-            obstacles.push({ x: 1800, y: 1300, radius: 35 });
-            obstacles.push({ x: 1200, y: 850, radius: 28 });
-            obstacles.push({ x: 900, y: 1300, radius: 32 });
-            obstacles.push({ x: 1600, y: 400, radius: 30 });
-            // Büsche (nur Deko, keine Kollision)
+            // spezielle Wände
+            obstacles.push({ x: 1800, y: 1200, radius: 32 });
+            obstacles.push({ x: 550, y: 1350, radius: 28 });
+            obstacles.push({ x: 1200, y: 750, radius: 30 });
         }
         buildMap();
         
-        // ----- Spielstatus -----
-        let gameRunning = true;
-        let matchActive = true;   // ob Kampf läuft
-        let player = null;
-        let allies = [];     // Team-Bots (2)
-        let enemies = [];    // Gegner-Bots (3)
-        let projectiles = [];
-        let lastFrameTime = 0;
-        let lastShot = 0;
-        let winCounter = 0;   // Gesamtsiege mit aktuellem Brawler (für Freischaltung)
-        
-        // Mausposition (Weltkoordinaten)
-        let mouseWorld = { x: canvas.width/2, y: canvas.height/2 };
-        
-        // Eingaben
-        const keys = { w: false, s: false, a: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-        
-        // ---------- Hilfsfunktionen ----------
-        function saveWins() {
-            localStorage.setItem("brawlStarsTeamWins", JSON.stringify(winsPerBrawler));
-            // Freischaltung nach Siegen
-            for(let i=1;i<BRAWLERS.length;i++) {
-                if(winsPerBrawler[i-1] >= 3) unlocked[i] = true;
-            }
-        }
-        
-        // Prüft, ob ein neuer Brawler freigeschaltet wurde (Anzeige im Konsolen-Log)
-        function checkUnlock() {
-            if(currentBrawlerId+1 < BRAWLERS.length && winsPerBrawler[currentBrawlerId] >= 3 && !unlocked[currentBrawlerId+1]) {
-                unlocked[currentBrawlerId+1] = true;
-                alert(`✨ NEUER BRAWLER FREIGESCHALTET: ${BRAWLERS[currentBrawlerId+1].name} ! ✨`);
-            }
-        }
-        
-        // Fügt Sieg hinzu (nach Match-Gewinn)
-        function addWinToCurrent() {
-            winsPerBrawler[currentBrawlerId]++;
-            saveWins();
-            winCounter = winsPerBrawler[currentBrawlerId];
-            winCountSpan.innerText = winCounter;
-            checkUnlock();
-            // Nächste Runde: Falls gewonnen -> wir starten automatisch neues Match mit gleichem Brawler? resetMatch wird aufgerufen
-        }
-        
         // Kollision mit Hindernissen
-        function collideWithObstacles(entity, radius) {
-            for(let obs of obstacles) {
+        function collideWithMap(entity, radius){
+            for(let obs of obstacles){
                 let dx = entity.x - obs.x;
                 let dy = entity.y - obs.y;
-                let dist = Math.hypot(dx, dy);
-                let minDist = radius + obs.radius;
-                if(dist < minDist) {
-                    let angle = Math.atan2(dy, dx);
-                    let overlap = minDist - dist;
+                let dist = Math.hypot(dx,dy);
+                let min = radius + obs.radius;
+                if(dist < min){
+                    let angle = Math.atan2(dy,dx);
+                    let overlap = min - dist;
                     entity.x += Math.cos(angle) * overlap;
                     entity.y += Math.sin(angle) * overlap;
                 }
             }
-            // Weltgrenzen
-            entity.x = Math.min(Math.max(entity.x, radius+20), MAP_WIDTH - radius-20);
-            entity.y = Math.min(Math.max(entity.y, radius+20), MAP_HEIGHT - radius-20);
+            entity.x = Math.min(Math.max(entity.x, radius+15), MAP_W - radius-15);
+            entity.y = Math.min(Math.max(entity.y, radius+15), MAP_H - radius-15);
         }
         
-        // Erstellt einen Bot (Team oder Gegner)
-        function createBot(isAlly, brawlerData, x, y) {
+        // --- Spielzustand ---
+        let matchActive = false;
+        let player = null;
+        let allies = [];    // 2 Team-Bots
+        let enemies = [];   // 3 Gegner-Bots
+        let projectiles = [];
+        let lastFrame = 0;
+        let lastShotTime = 0;
+        let winCounter = 0;
+        
+        // Maus (Weltkoordinaten)
+        let mouseWorld = { x: MAP_W/2, y: MAP_H/2 };
+        
+        // Tasten
+        const keys = { w:false, s:false, a:false, d:false, ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
+        
+        // --- Hilfsfunktionen ---
+        function saveWins(){
+            localStorage.setItem("brawlStarsWins", JSON.stringify(winsPerBrawler));
+            for(let i=1;i<BRAWLERS.length;i++){
+                if(winsPerBrawler[i-1] >= 3) unlocked[i] = true;
+            }
+            renderMenu();
+        }
+        
+        function addWinToCurrent(){
+            winsPerBrawler[currentBrawlerId]++;
+            winCounter = winsPerBrawler[currentBrawlerId];
+            totalWinsSpan.innerText = winCounter;
+            saveWins();
+            // Prüfe Freischaltung
+            if(currentBrawlerId+1 < BRAWLERS.length && winsPerBrawler[currentBrawlerId] >= 3 && !unlocked[currentBrawlerId+1]){
+                unlocked[currentBrawlerId+1] = true;
+                alert(`✨ NEUER BRAWLER: ${BRAWLERS[currentBrawlerId+1].name} freigeschaltet! ✨`);
+                renderMenu();
+            }
+        }
+        
+        // Bot erstellen (Team oder Gegner)
+        function createBot(isAlly, brawlerData, x, y){
             return {
-                x: x, y: y,
-                radius: 20,
-                brawler: { ...brawlerData },
+                x, y, radius: 20,
+                brawler: {...brawlerData},
                 health: brawlerData.hp,
                 maxHealth: brawlerData.hp,
                 isAlly: isAlly,
-                lastShotTime: performance.now() - Math.random() * 400,
+                lastShot: performance.now() - Math.random()*400,
                 speed: brawlerData.speed,
-                target: null,
-                knockback: { x:0, y:0 }
+                knockback: {x:0,y:0}
             };
         }
         
-        // Gegner KI: bewegt sich auf nächsten Feind (Spieler oder Allies)
-        function updateBot(bot, delta, now, enemiesList, alliesList, playerUnit) {
-            if(bot.health <= 0) return;
-            let target = null;
-            let closestDist = Infinity;
-            // Feinde bestimmen
-            let opponents = bot.isAlly ? enemiesList : [playerUnit, ...alliesList];
-            for(let opp of opponents) {
-                if(opp.health <= 0) continue;
-                let d2 = (bot.x - opp.x)**2 + (bot.y - opp.y)**2;
-                if(d2 < closestDist) {
-                    closestDist = d2;
-                    target = opp;
-                }
+        // Gegner spawnen auf der anderen Seite der Map (relativ zum Team)
+        function spawnOpponents(teamCenterX, teamCenterY){
+            let enemiesList = [];
+            let side = (teamCenterX < MAP_W/2) ? "right" : "left";
+            let baseX = (side === "right") ? MAP_W - 450 : 450;
+            let baseY = teamCenterY + (Math.random() - 0.5)*200;
+            baseY = Math.min(Math.max(baseY, 200), MAP_H-200);
+            let brawlerIndices = [1,3,5]; // Colt, Brock, Emz als Gegner
+            for(let i=0;i<3;i++){
+                let bData = BRAWLERS[brawlerIndices[i % brawlerIndices.length]];
+                let xOff = (i-1)*110;
+                let enemy = createBot(false, bData, baseX + xOff, baseY + (i%2)*50);
+                enemiesList.push(enemy);
             }
-            if(target && target.health>0) {
-                let dx = target.x - bot.x;
-                let dy = target.y - bot.y;
-                let len = Math.hypot(dx, dy);
-                if(len > 0.01) {
-                    let move = bot.speed * delta;
-                    bot.x += (dx/len) * move;
-                    bot.y += (dy/len) * move;
-                }
-                // Angriff
-                let nowMs = now;
-                let cd = bot.brawler.cooldown;
-                if(nowMs - bot.lastShotTime > cd && len < bot.brawler.range + 30) {
-                    shootFromBot(bot, target.x, target.y, nowMs);
-                    bot.lastShotTime = nowMs;
-                }
-            }
-            // Knockback
-            if(bot.knockback.x !==0 || bot.knockback.y !==0) {
-                bot.x += bot.knockback.x * delta;
-                bot.y += bot.knockback.y * delta;
-                bot.knockback.x *= 0.85;
-                bot.knockback.y *= 0.85;
-                if(Math.abs(bot.knockback.x)<1) bot.knockback.x=0;
-                if(Math.abs(bot.knockback.y)<1) bot.knockback.y=0;
-            }
-            collideWithObstacles(bot, bot.radius);
+            return enemiesList;
         }
         
-        // Schuss von Bot
-        function shootFromBot(bot, targetX, targetY, now) {
-            let dirX = targetX - bot.x;
-            let dirY = targetY - bot.y;
-            let len = Math.hypot(dirX, dirY);
-            if(len<0.01) return;
-            dirX /= len; dirY /= len;
-            let b = bot.brawler;
-            let baseDamage = b.damage;
-            let count = b.projectileCount;
-            let spread = b.spreadAngle;
-            for(let i=0; i<count; i++) {
-                let angleOffset = (i - (count-1)/2) * spread;
-                let cosA = Math.cos(angleOffset);
-                let sinA = Math.sin(angleOffset);
-                let dirX2 = dirX * cosA - dirY * sinA;
-                let dirY2 = dirX * sinA + dirY * cosA;
-                projectiles.push({
-                    x: bot.x, y: bot.y, radius: 7,
-                    vx: dirX2 * 700, vy: dirY2 * 700,
-                    damage: baseDamage,
-                    sourceIsPlayer: false,
-                    owner: bot,
-                    life: true,
-                    range: b.range
-                });
+        // Team-Bots (Verbündete)
+        function spawnAllies(centerX, centerY){
+            let alliesList = [];
+            let allyBrawlers = [BRAWLERS[0], BRAWLERS[2]]; // Shelly, Bull
+            for(let i=0;i<2;i++){
+                let offX = (i===0? -70 : 70);
+                let ally = createBot(true, allyBrawlers[i], centerX + offX, centerY - 30);
+                alliesList.push(ally);
             }
+            return alliesList;
         }
         
-        // Spieler Schuss (mit individueller Schussart)
-        function playerShoot(now) {
+        // Spiel zurücksetzen (Match starten)
+        function startMatch(){
+            matchActive = true;
+            let brawler = BRAWLERS[currentBrawlerId];
+            // Spieler startet etwas links/rechts der Mitte
+            let startX = MAP_W/2 - 180;
+            let startY = MAP_H/2;
+            player = {
+                x: startX, y: startY, radius: 20,
+                brawler: brawler,
+                health: brawler.hp,
+                maxHealth: brawler.hp,
+                speed: brawler.speed,
+                invincibleUntil: 0,
+                knockback: {x:0,y:0}
+            };
+            // Team Bots
+            allies = spawnAllies(player.x, player.y);
+            // Gegner auf der anderen Seite
+            enemies = spawnOpponents(player.x, player.y);
+            projectiles = [];
+            lastShotTime = performance.now();
+            updateCamera();
+            updateUI();
+        }
+        
+        // Kamera folgt Spieler
+        function updateCamera(){
+            if(!player) return;
+            camera.x = player.x - canvas.width/2;
+            camera.y = player.y - canvas.height/2;
+            camera.x = Math.min(Math.max(camera.x, 0), MAP_W - canvas.width);
+            camera.y = Math.min(Math.max(camera.y, 0), MAP_H - canvas.height);
+        }
+        
+        function updateUI(){
+            if(player) playerHpSpan.innerText = Math.max(0, Math.floor((player.health/player.maxHealth)*100));
+            let aliveAllies = allies.filter(a=>a.health>0).length;
+            teamCountSpan.innerText = aliveAllies;
+            enemyCountSpan.innerText = enemies.length;
+            totalWinsSpan.innerText = winsPerBrawler[currentBrawlerId];
+        }
+        
+        // Schuss vom Spieler
+        function playerShoot(now){
             if(!matchActive || player.health<=0) return false;
             let cd = player.brawler.cooldown;
-            if(now - lastShot < cd) return false;
-            let dirX = mouseWorld.x - player.x;
-            let dirY = mouseWorld.y - player.y;
-            let len = Math.hypot(dirX, dirY);
+            if(now - lastShotTime < cd) return false;
+            let dx = mouseWorld.x - player.x;
+            let dy = mouseWorld.y - player.y;
+            let len = Math.hypot(dx,dy);
             if(len<0.01) return false;
-            dirX /= len; dirY /= len;
+            dx/=len; dy/=len;
             let b = player.brawler;
-            let count = b.projectileCount;
-            let spread = b.spreadAngle;
-            for(let i=0; i<count; i++) {
-                let angleOffset = (i - (count-1)/2) * spread;
-                let cosA = Math.cos(angleOffset);
-                let sinA = Math.sin(angleOffset);
-                let dirX2 = dirX * cosA - dirY * sinA;
-                let dirY2 = dirX * sinA + dirY * cosA;
+            let count = b.projCount;
+            let spread = b.spread;
+            for(let i=0;i<count;i++){
+                let angleOff = (i - (count-1)/2) * spread;
+                let cosA = Math.cos(angleOff);
+                let sinA = Math.sin(angleOff);
+                let dirX = dx*cosA - dy*sinA;
+                let dirY = dx*sinA + dy*cosA;
                 projectiles.push({
                     x: player.x, y: player.y, radius: 7,
-                    vx: dirX2 * 780, vy: dirY2 * 780,
-                    damage: b.damage,
-                    sourceIsPlayer: true,
+                    vx: dirX * 780, vy: dirY * 780,
+                    damage: b.dmg,
+                    isPlayer: true,
                     owner: player,
                     range: b.range
                 });
             }
-            lastShot = now;
+            lastShotTime = now;
             return true;
         }
         
-        // Update Projektile
-        function updateProjectiles(delta, now) {
-            for(let i=0; i<projectiles.length; i++) {
-                let p = projectiles[i];
-                p.x += p.vx * delta;
-                p.y += p.vy * delta;
-                // Entfernen außerhalb der Map
-                if(p.x < -200 || p.x > MAP_WIDTH+200 || p.y < -200 || p.y > MAP_HEIGHT+200) {
-                    projectiles.splice(i,1); i--; continue;
+        // Bot-KI (bewegt sich und schießt NUR wenn Gegner in Reichweite)
+        function updateBot(bot, delta, now, enemiesList, alliesList, playerUnit){
+            if(bot.health<=0) return;
+            // Ziel finden (nächster Feind)
+            let opponents = bot.isAlly ? enemiesList : [playerUnit, ...alliesList];
+            let closest = null;
+            let minDist2 = Infinity;
+            for(let opp of opponents){
+                if(opp.health<=0) continue;
+                let d2 = (bot.x-opp.x)**2 + (bot.y-opp.y)**2;
+                if(d2 < minDist2){
+                    minDist2 = d2;
+                    closest = opp;
                 }
-                // Kollision mit Hindernissen
-                let hitObs = false;
-                for(let obs of obstacles) {
-                    if(Math.hypot(p.x - obs.x, p.y - obs.y) < p.radius + obs.radius) {
-                        hitObs = true;
-                        break;
-                    }
+            }
+            if(closest && closest.health>0){
+                let dx = closest.x - bot.x;
+                let dy = closest.y - bot.y;
+                let dist = Math.hypot(dx,dy);
+                if(dist>0.01){
+                    let move = bot.speed * delta;
+                    bot.x += (dx/dist) * move;
+                    bot.y += (dy/dist) * move;
                 }
-                if(hitObs) {
-                    projectiles.splice(i,1); i--; continue;
-                }
-                // Treffer prüfen
-                let hit = false;
-                // Gegnerische Treffer
-                if(p.sourceIsPlayer) {
-                    // Trifft Gegner
-                    for(let j=0; j<enemies.length; j++) {
-                        let e = enemies[j];
-                        if(e.health>0 && Math.hypot(p.x-e.x, p.y-e.y) < p.radius+e.radius) {
-                            e.health -= p.damage;
-                            hit = true;
-                            if(e.health <= 0) {
-                                enemies.splice(j,1);
-                            }
-                            break;
+                // Schuss nur, wenn in Reichweite
+                let range = bot.brawler.range;
+                if(dist < range + 35 && (now - bot.lastShot) > bot.brawler.cooldown){
+                    // Schießen auf das Ziel
+                    let dirX = closest.x - bot.x;
+                    let dirY = closest.y - bot.y;
+                    let len = Math.hypot(dirX,dirY);
+                    if(len>0.01){
+                        dirX/=len; dirY/=len;
+                        let bData = bot.brawler;
+                        let count = bData.projCount;
+                        let spread = bData.spread;
+                        for(let i=0;i<count;i++){
+                            let angleOff = (i - (count-1)/2) * spread;
+                            let cosA = Math.cos(angleOff);
+                            let sinA = Math.sin(angleOff);
+                            let dirX2 = dirX*cosA - dirY*sinA;
+                            let dirY2 = dirX*sinA + dirY*cosA;
+                            projectiles.push({
+                                x: bot.x, y: bot.y, radius: 7,
+                                vx: dirX2 * 720, vy: dirY2 * 720,
+                                damage: bData.dmg,
+                                isPlayer: false,
+                                owner: bot,
+                                range: bData.range
+                            });
                         }
-                    }
-                    if(!hit && allies.length>0) {
-                        // Trifft eigene allies? Nein, Schaden nur Gegner (sonst friendly fire aus)
-                    }
-                } else {
-                    // Bot Projektile: treffen Spieler oder Allies
-                    if(player.health>0 && Math.hypot(p.x-player.x, p.y-player.y) < p.radius+player.radius) {
-                        player.health -= p.damage;
-                        hit = true;
-                        if(player.health<=0) matchActive = false;
-                    }
-                    if(!hit) {
-                        for(let a of allies) {
-                            if(a.health>0 && Math.hypot(p.x-a.x, p.y-a.y) < p.radius+a.radius) {
-                                a.health -= p.damage;
-                                hit = true;
-                                if(a.health<=0) { /* bleibt tot */ }
-                                break;
-                            }
-                        }
+                        bot.lastShot = now;
                     }
                 }
-                if(hit) {
-                    projectiles.splice(i,1); i--;
-                }
             }
-        }
-        
-        // Match zurücksetzen / neues Spiel
-        function resetMatch() {
-            matchActive = true;
-            gameRunning = true;
-            // Lade aktuellen Brawler
-            let brawler = BRAWLERS[currentBrawlerId];
-            player = {
-                x: MAP_WIDTH/2 - 120, y: MAP_HEIGHT/2,
-                radius: 20,
-                health: brawler.hp,
-                maxHealth: brawler.hp,
-                brawler: brawler,
-                speed: brawler.speed,
-                knockback: {x:0,y:0},
-                invincibleUntil: 0
-            };
-            // Allies (2 Bots mit leicht schwächeren Brawlern? nehmen random aus verfügbaren)
-            let allyBrawlers = [BRAWLERS[0], BRAWLERS[2 % BRAWLERS.length]];
-            allies = [];
-            let startX = player.x + 80;
-            for(let i=0;i<2;i++) {
-                let allyBot = createBot(true, allyBrawlers[i % allyBrawlers.length], startX + i*70, player.y-50);
-                allyBot.health = allyBot.brawler.hp;
-                allies.push(allyBot);
+            // Knockback
+            if(bot.knockback.x !==0 || bot.knockback.y !==0){
+                bot.x += bot.knockback.x * delta;
+                bot.y += bot.knockback.y * delta;
+                bot.knockback.x *= 0.85;
+                bot.knockback.y *= 0.85;
+                if(Math.abs(bot.knockback.x)<0.5) bot.knockback.x=0;
+                if(Math.abs(bot.knockback.y)<0.5) bot.knockback.y=0;
             }
-            // Gegner (3 Bots)
-            enemies = [];
-            let enemyBrawlers = [BRAWLERS[1], BRAWLERS[3], BRAWLERS[4]];
-            for(let i=0;i<3;i++) {
-                let eBot = createBot(false, enemyBrawlers[i], MAP_WIDTH/2 + 150 + i*80, MAP_HEIGHT/2 + 60);
-                eBot.health = eBot.brawler.hp;
-                enemies.push(eBot);
-            }
-            projectiles = [];
-            lastShot = performance.now() - 500;
-            // zentriere Kamera
-            updateCamera();
+            collideWithMap(bot, bot.radius);
         }
         
-        function updateCamera() {
-            if(!player) return;
-            camera.x = player.x - canvas.width/2;
-            camera.y = player.y - canvas.height/2;
-            camera.x = Math.min(Math.max(camera.x, 0), MAP_WIDTH - canvas.width);
-            camera.y = Math.min(Math.max(camera.y, 0), MAP_HEIGHT - canvas.height);
-        }
-        
-        // Weltkoordinate zu Canvas
-        function worldToScreen(wx, wy) {
-            return { x: wx - camera.x, y: wy - camera.y };
-        }
-        
-        // Bewegung, Kollision, KI
-        function updateGame(delta, now) {
+        // Updates während des Matches
+        function updateGame(delta, now){
             if(!matchActive) return;
-            if(player.health <= 0) {
+            if(player.health <= 0){
                 matchActive = false;
+                showResult("lose");
                 return;
             }
             // Spieler Bewegung
-            let moveX=0, moveY=0;
-            if(keys.w || keys.ArrowUp) moveY-=1;
-            if(keys.s || keys.ArrowDown) moveY+=1;
-            if(keys.a || keys.ArrowLeft) moveX-=1;
-            if(keys.d || keys.ArrowRight) moveX+=1;
-            if(moveX!==0 || moveY!==0) {
-                let len = Math.hypot(moveX,moveY);
-                moveX/=len; moveY/=len;
-                player.x += moveX * player.speed * delta;
-                player.y += moveY * player.speed * delta;
+            let mx=0, my=0;
+            if(keys.w || keys.ArrowUp) my-=1;
+            if(keys.s || keys.ArrowDown) my+=1;
+            if(keys.a || keys.ArrowLeft) mx-=1;
+            if(keys.d || keys.ArrowRight) mx+=1;
+            if(mx!==0 || my!==0){
+                let len = Math.hypot(mx,my);
+                mx/=len; my/=len;
+                player.x += mx * player.speed * delta;
+                player.y += my * player.speed * delta;
             }
-            if(player.knockback.x !==0 || player.knockback.y !==0) {
+            if(player.knockback.x !==0 || player.knockback.y !==0){
                 player.x += player.knockback.x * delta;
                 player.y += player.knockback.y * delta;
                 player.knockback.x *= 0.85;
@@ -501,221 +546,300 @@
                 if(Math.abs(player.knockback.x)<0.5) player.knockback.x=0;
                 if(Math.abs(player.knockback.y)<0.5) player.knockback.y=0;
             }
-            collideWithObstacles(player, player.radius);
-            // Invincibility frames (kurz)
-            if(now < player.invincibleUntil) { /* unverwundbar */ }
+            collideWithMap(player, player.radius);
             
-            // Bots aktualisieren
-            for(let i=0;i<allies.length;i++) {
+            // Bots bewegen
+            for(let i=0;i<allies.length;i++){
                 if(allies[i].health>0) updateBot(allies[i], delta, now, enemies, allies.filter(a=>a!==allies[i] && a.health>0), player);
-                else allies.splice(i,1);
+                else { allies.splice(i,1); i--; }
             }
-            for(let i=0;i<enemies.length;i++) {
+            for(let i=0;i<enemies.length;i++){
                 if(enemies[i].health>0) updateBot(enemies[i], delta, now, [player, ...allies], enemies.filter(e=>e!==enemies[i] && e.health>0), player);
-                else enemies.splice(i,1);
+                else { enemies.splice(i,1); i--; }
             }
             
-            // Kollision Spieler mit Gegner (Schaden)
-            for(let e of enemies) {
+            // Kollision Spieler vs Gegner (Schaden + Rückstoß)
+            for(let e of enemies){
                 if(e.health<=0) continue;
                 let dist = Math.hypot(player.x-e.x, player.y-e.y);
-                if(dist < player.radius+e.radius) {
+                if(dist < player.radius+e.radius){
                     let angle = Math.atan2(e.y-player.y, e.x-player.x);
-                    let knock = 250;
+                    let knock = 280;
                     player.knockback.x += Math.cos(angle)*knock;
                     player.knockback.y += Math.sin(angle)*knock;
-                    if(now >= player.invincibleUntil) {
-                        player.health -= 14;
-                        player.invincibleUntil = now + 600;
+                    if(now >= player.invincibleUntil){
+                        player.health -= 16;
+                        player.invincibleUntil = now + 550;
                         if(player.health<=0) matchActive=false;
                     }
-                    e.x += Math.cos(angle)*15;
-                    e.y += Math.sin(angle)*15;
-                    collideWithObstacles(e, e.radius);
+                    e.x += Math.cos(angle)*22;
+                    e.y += Math.sin(angle)*22;
+                    collideWithMap(e, e.radius);
                 }
             }
             
             // Projektile
-            updateProjectiles(delta, now);
+            for(let i=0;i<projectiles.length;i++){
+                let p = projectiles[i];
+                p.x += p.vx * delta;
+                p.y += p.vy * delta;
+                if(p.x<-300 || p.x>MAP_W+300 || p.y<-300 || p.y>MAP_H+300){
+                    projectiles.splice(i,1); i--; continue;
+                }
+                // Hindernis-Kollision
+                let hitWall=false;
+                for(let obs of obstacles){
+                    if(Math.hypot(p.x-obs.x, p.y-obs.y) < p.radius+obs.radius){
+                        hitWall=true; break;
+                    }
+                }
+                if(hitWall){ projectiles.splice(i,1); i--; continue; }
+                
+                let hit = false;
+                if(p.isPlayer){
+                    for(let j=0;j<enemies.length;j++){
+                        let e=enemies[j];
+                        if(e.health>0 && Math.hypot(p.x-e.x, p.y-e.y) < p.radius+e.radius){
+                            e.health -= p.damage;
+                            hit=true;
+                            if(e.health<=0) enemies.splice(j,1);
+                            break;
+                        }
+                    }
+                } else {
+                    // Gegnerisches Projektil
+                    if(player.health>0 && Math.hypot(p.x-player.x, p.y-player.y) < p.radius+player.radius){
+                        player.health -= p.damage;
+                        hit=true;
+                        if(player.health<=0) matchActive=false;
+                    }
+                    if(!hit){
+                        for(let a of allies){
+                            if(a.health>0 && Math.hypot(p.x-a.x, p.y-a.y) < p.radius+a.radius){
+                                a.health -= p.damage;
+                                hit=true;
+                                if(a.health<=0) break;
+                            }
+                        }
+                    }
+                }
+                if(hit){ projectiles.splice(i,1); i--; }
+            }
             
-            // Siegprüfung: alle Gegner tot
-            if(enemies.length === 0 && matchActive) {
+            // Siegprüfung
+            if(enemies.length === 0 && matchActive){
                 matchActive = false;
                 addWinToCurrent();
-                // Neustart nach kurzer Verzögerung (automatisch neues Match)
-                setTimeout(() => { resetMatch(); }, 1800);
+                showResult("win");
+                return;
             }
-            // Niederlage wenn tot
-            if(player.health <= 0) matchActive = false;
-            
-            // UI Aktualisierung
-            playerHpSpan.innerText = Math.max(0, Math.floor((player.health/player.maxHealth)*100));
-            teamAliveSpan.innerText = allies.filter(a=>a.health>0).length;
-            enemyAliveSpan.innerText = enemies.length;
+            updateUI();
         }
         
-        // Zeichnen mit Sichtradius (Nebel)
-        function drawVisionAndWorld() {
-            // 1. Zeichne gesamte Karte (nur innerhalb Kamera für Performance)
-            ctx.save();
+        function showResult(type){
+            if(type === "win"){
+                resultTitle.innerText = "🏆 SIEG! 🏆";
+                resultMessage.innerText = `Du und dein Team habt gewonnen! +1 Sieg für ${BRAWLERS[currentBrawlerId].name}`;
+            } else {
+                resultTitle.innerText = "💀 NIEDERLAGE 💀";
+                resultMessage.innerText = "Dein Team wurde besiegt. Versuch's nochmal!";
+            }
+            resultPopup.classList.remove("hide");
+        }
+        
+        // ---------- GRAFIK (Detaillierte Charaktere) ----------
+        function drawCharacter(x, y, charData, isPlayer, healthPercent){
+            // Körper
+            ctx.beginPath();
+            ctx.arc(x, y, 21, 0, Math.PI*2);
+            ctx.fillStyle = charData.color;
+            ctx.fill();
+            ctx.strokeStyle = "#3A281C";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            // Augen
+            ctx.fillStyle = "#FEF8E0";
+            ctx.beginPath();
+            ctx.arc(x-8, y-5, 5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x+8, y-5, 5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = "#2F261A";
+            ctx.beginPath();
+            ctx.arc(x-7, y-6, 2.5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x+9, y-6, 2.5, 0, Math.PI*2);
+            ctx.fill();
+            // Pupillen Richtung Maus (nur Spieler)
+            if(isPlayer){
+                let angle = Math.atan2(mouseWorld.y - player.y, mouseWorld.x - player.x);
+                let offX1 = Math.cos(angle)*2.5;
+                let offY1 = Math.sin(angle)*2.2;
+                let offX2 = Math.cos(angle)*2.5;
+                let offY2 = Math.sin(angle)*2.2;
+                ctx.fillStyle = "#000";
+                ctx.beginPath(); ctx.arc(x-7+offX1, y-6+offY1, 1.8, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(x+9+offX2, y-6+offY2, 1.8, 0, 2*Math.PI); ctx.fill();
+            } else {
+                ctx.fillStyle = "#1E1A12";
+                ctx.beginPath(); ctx.arc(x-7, y-6, 1.8,0,2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(x+9, y-6, 1.8,0,2*Math.PI); ctx.fill();
+            }
+            // Hut / Accessoire
+            ctx.font = "24px sans-serif";
+            ctx.fillStyle = "#F5D742";
+            ctx.fillText(charData.hat, x-12, y-18);
+            // Gesundheitsbalken
+            ctx.fillStyle = "#631212";
+            ctx.fillRect(x-25, y-27, 50, 7);
+            ctx.fillStyle = "#F2644A";
+            ctx.fillRect(x-25, y-27, 50 * healthPercent, 7);
+        }
+        
+        function renderGame(){
+            if(!ctx) return;
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            // Hintergrund Gras
-            ctx.fillStyle = "#6f9940";
+            // Hintergrund
+            ctx.fillStyle = "#7bbf4a";
             ctx.fillRect(0,0,canvas.width,canvas.height);
-            // Hindernisse (Felsen)
-            for(let obs of obstacles) {
-                let scr = worldToScreen(obs.x, obs.y);
-                if(scr.x + obs.radius <0 || scr.x - obs.radius > canvas.width || scr.y+obs.radius<0 || scr.y-obs.radius>canvas.height) continue;
+            // Map-Elemente
+            for(let obs of obstacles){
+                let scrX = obs.x - camera.x;
+                let scrY = obs.y - camera.y;
+                if(scrX+obs.radius<0 || scrX-obs.radius>canvas.width || scrY+obs.radius<0 || scrY-obs.radius>canvas.height) continue;
                 ctx.beginPath();
-                ctx.arc(scr.x, scr.y, obs.radius, 0, 2*Math.PI);
-                ctx.fillStyle = "#6b4c3b";
+                ctx.arc(scrX, scrY, obs.radius-2, 0, 2*Math.PI);
+                ctx.fillStyle = "#8B694C";
                 ctx.fill();
-                ctx.fillStyle = "#946b54";
-                ctx.beginPath(); ctx.arc(scr.x-3, scr.y-3, obs.radius-8, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath();
+                ctx.arc(scrX-3, scrY-3, obs.radius-8, 0, 2*Math.PI);
+                ctx.fillStyle = "#B68B65";
+                ctx.fill();
             }
-            // Zeichne Bots/Spieler (erstmal alle, dann Nebel)
-            function drawEntity(e, isPlayer=false) {
-                let scr = worldToScreen(e.x, e.y);
-                if(scr.x + 30 <0 || scr.x-30>canvas.width || scr.y+30<0 || scr.y-30>canvas.height) return;
-                ctx.beginPath();
-                ctx.arc(scr.x, scr.y, e.radius-2, 0, 2*Math.PI);
-                ctx.fillStyle = e.brawler?.color || "#ddaa66";
-                ctx.fill();
-                ctx.fillStyle = "white";
-                ctx.font = "bold 20px sans-serif";
-                ctx.fillText(e.brawler?.emoji || "⚔️", scr.x-12, scr.y+8);
+            // Allies & Gegner
+            function drawEntity(e, isPl){
+                let scrX = e.x - camera.x;
+                let scrY = e.y - camera.y;
+                if(scrX+40<0 || scrX-40>canvas.width || scrY+40<0 || scrY-40>canvas.height) return;
                 let hpPercent = e.health/e.maxHealth;
-                ctx.fillStyle = "#631010"; ctx.fillRect(scr.x-22, scr.y-20, 44, 6);
-                ctx.fillStyle = "#ff7e5e"; ctx.fillRect(scr.x-22, scr.y-20, 44*hpPercent, 6);
-                if(isPlayer) {
-                    ctx.beginPath(); ctx.arc(scr.x, scr.y, e.radius+2, 0, 2*Math.PI);
-                    ctx.strokeStyle = "#FFD966"; ctx.lineWidth=2; ctx.stroke();
-                }
+                drawCharacter(scrX, scrY, e.brawler, isPl, hpPercent);
             }
-            // Zeichne alle (werden später durch Sichtmaske eingeschränkt)
-            drawEntity(player, true);
-            for(let a of allies) if(a.health>0) drawEntity(a);
-            for(let e of enemies) if(e.health>0) drawEntity(e);
+            for(let a of allies) if(a.health>0) drawEntity(a, false);
+            for(let e of enemies) if(e.health>0) drawEntity(e, false);
+            if(player) drawEntity(player, true);
             
             // Projektile
-            for(let p of projectiles) {
-                let scr = worldToScreen(p.x, p.y);
-                ctx.beginPath(); ctx.arc(scr.x, scr.y, 6, 0, 2*Math.PI);
-                ctx.fillStyle = "#FFCC55"; ctx.fill();
+            for(let p of projectiles){
+                let scrX = p.x - camera.x;
+                let scrY = p.y - camera.y;
+                ctx.beginPath();
+                ctx.arc(scrX, scrY, 6, 0, 2*Math.PI);
+                ctx.fillStyle = "#FFD966";
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(scrX-1, scrY-1, 2.5, 0, 2*Math.PI);
+                ctx.fillStyle = "#FFA500";
+                ctx.fill();
             }
-            
-            // NEBEL / SICHTRADIUS (alpha mask)
-            let playerScreen = worldToScreen(player.x, player.y);
-            ctx.globalCompositeOperation = "destination-out";
-            ctx.beginPath();
-            ctx.arc(playerScreen.x, playerScreen.y, VISION_RADIUS, 0, 2*Math.PI);
-            ctx.fillStyle = "rgba(0,0,0,1)";
-            ctx.fill();
-            ctx.globalCompositeOperation = "source-over";
-            // Weicher Rand
-            ctx.globalCompositeOperation = "source-over";
-            ctx.shadowBlur = 0;
-            ctx.beginPath();
-            ctx.arc(playerScreen.x, playerScreen.y, VISION_RADIUS+8, 0, 2*Math.PI);
-            ctx.fillStyle = "rgba(0,0,0,0.5)";
-            ctx.fill();
-            // kleinen Fackel-Effekt
-            ctx.globalCompositeOperation = "source-over";
-            ctx.beginPath();
-            ctx.arc(playerScreen.x, playerScreen.y, VISION_RADIUS-12, 0, 2*Math.PI);
-            ctx.fillStyle = "rgba(255,240,150,0.1)";
-            ctx.fill();
-            ctx.restore();
-            
-            // Manuell nach dem Nebel noch Spieler hervorheben? schon okay.
-            // Text für besiegte (Game Over)
-            if(!matchActive && player.health <=0) {
-                ctx.font = "bold 38px system-ui";
-                ctx.fillStyle = "#FFAA55";
+            if(!matchActive && player && player.health<=0){
+                ctx.font = "bold 42px system-ui";
+                ctx.fillStyle = "#FFCC88";
                 ctx.shadowBlur = 0;
-                ctx.fillText("💀 GAME OVER 💀", canvas.width/2-130, canvas.height/2);
-            } else if(!matchActive && enemies.length===0) {
-                ctx.font = "bold 34px system-ui";
-                ctx.fillStyle = "#FFFFAA";
-                ctx.fillText("🏆 SIEG! Nächste Runde startet...", canvas.width/2-190, canvas.height/2);
+                ctx.fillText("GAME OVER", canvas.width/2-110, canvas.height/2);
             }
         }
         
-        // Maus-Weltkoordinaten aktualisieren
-        function updateMouseWorld(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let canvasX = (e.clientX - rect.left) * scaleX;
-            let canvasY = (e.clientY - rect.top) * scaleY;
-            mouseWorld.x = camera.x + canvasX;
-            mouseWorld.y = camera.y + canvasY;
-            // Begrenzen
-            mouseWorld.x = Math.min(Math.max(mouseWorld.x, 0), MAP_WIDTH);
-            mouseWorld.y = Math.min(Math.max(mouseWorld.y, 0), MAP_HEIGHT);
+        // --- Menü rendern ---
+        function renderMenu(){
+            const container = document.getElementById('brawlerList');
+            container.innerHTML = '';
+            for(let i=0;i<BRAWLERS.length;i++){
+                let b = BRAWLERS[i];
+                let isUnlocked = unlocked[i];
+                let wins = winsPerBrawler[i];
+                let card = document.createElement('div');
+                card.className = `brawler-card ${!isUnlocked ? 'locked' : ''} ${currentBrawlerId===i ? 'selected' : ''}`;
+                if(isUnlocked){
+                    card.onclick = () => { currentBrawlerId = i; renderMenu(); };
+                }
+                card.innerHTML = `
+                    <div class="brawler-icon">${b.hat}</div>
+                    <div class="brawler-name">${b.name}</div>
+                    <div class="brawler-stats">❤️${b.hp} ⚡${b.speed} 💥${b.dmg}</div>
+                    <div class="win-progress">${isUnlocked ? (wins>=3 ? "🏆 MASTER" : `🏅 ${wins}/3 Siege`) : "🔒 gesperrt"}</div>
+                `;
+                container.appendChild(card);
+            }
         }
         
-        // --- Event Listener ---
-        function initEvents() {
-            window.addEventListener('keydown', (e) => {
-                let k = e.key.toLowerCase();
-                if(keys.hasOwnProperty(k)) keys[k]=true;
-                if(['w','s','a','d','arrowup','arrowdown','arrowleft','arrowright'].some(c=>c===k)) e.preventDefault();
-            });
-            window.addEventListener('keyup', (e) => {
-                let k = e.key.toLowerCase();
-                if(keys.hasOwnProperty(k)) keys[k]=false;
-            });
-            canvas.addEventListener('mousemove', updateMouseWorld);
-            canvas.addEventListener('mousedown', (e) => {
-                if(e.button !== 0) return;
-                e.preventDefault();
-                if(matchActive && player.health>0) playerShoot(performance.now());
-            });
-            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-            resetBtn.addEventListener('click', () => {
-                resetMatch();
-                matchActive = true;
-            });
-        }
-        
-        // Hauptloop
-        let lastTimestamp = 0;
-        function gameLoop(nowMs) {
-            requestAnimationFrame(gameLoop);
-            if(!lastTimestamp) { lastTimestamp = nowMs; return; }
-            let delta = Math.min(0.033, (nowMs - lastTimestamp) / 1000);
-            if(delta <= 0) { lastTimestamp = nowMs; return; }
-            lastTimestamp = nowMs;
-            if(matchActive) {
+        // --- Haupt-Loop ---
+        let lastTime = 0;
+        function animate(nowMs){
+            requestAnimationFrame(animate);
+            let delta = Math.min(0.033, (nowMs - (lastTime||nowMs))/1000);
+            if(delta<0.01){ lastTime=nowMs; return; }
+            lastTime = nowMs;
+            if(matchActive){
                 updateGame(delta, nowMs);
                 updateCamera();
             }
-            drawVisionAndWorld();
+            renderGame();
         }
         
-        // Charakter-Auswahl (Menü später, aber momentan wählbar über Konsole? Der Einfachheit halber bauen wir ein Popup? Benötigt wird Hauptmenü, aber der Benutzer wollte Charakterauswahl im Spiel. Um nicht zu überladen, bieten wir einen einfachen Brawler-Wechsel via Tasten? Wir implementieren eine kleine UI-Taste, aber wegen Komplexität setzen wir vorerst festen Brawler mit Siegen. Man kann über localStorage wechseln. Aber wir zeigen einen Hinweis an:
-        // Tastendruck 1-7 wechselt (nur freigeschaltete)
-        window.addEventListener('keydown', (e) => {
-            let num = parseInt(e.key);
-            if(num>=1 && num<=7 && !isNaN(num)) {
-                let idx = num-1;
-                if(unlocked[idx] && matchActive === false) {
-                    currentBrawlerId = idx;
-                    winCounter = winsPerBrawler[currentBrawlerId];
-                    winCountSpan.innerText = winCounter;
-                    resetMatch();
-                } else if(matchActive) { /* nicht im kampf */ }
-            }
-        });
+        // --- Event Handling ---
+        function worldMouseFromCanvas(e){
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width/rect.width;
+            const sy = canvas.height/rect.height;
+            let cx = (e.clientX - rect.left)*sx;
+            let cy = (e.clientY - rect.top)*sy;
+            mouseWorld.x = camera.x + cx;
+            mouseWorld.y = camera.y + cy;
+            mouseWorld.x = Math.min(Math.max(mouseWorld.x,0), MAP_W);
+            mouseWorld.y = Math.min(Math.max(mouseWorld.y,0), MAP_H);
+        }
         
-        // Initialisierung
-        resetMatch();
+        function initEvents(){
+            window.addEventListener('keydown', (e)=>{
+                let k = e.key.toLowerCase();
+                if(keys.hasOwnProperty(k)) keys[k]=true;
+                if(['w','s','a','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) e.preventDefault();
+            });
+            window.addEventListener('keyup', (e)=>{
+                let k = e.key.toLowerCase();
+                if(keys.hasOwnProperty(k)) keys[k]=false;
+            });
+            canvas.addEventListener('mousemove', worldMouseFromCanvas);
+            canvas.addEventListener('mousedown', (e)=>{
+                if(e.button!==0) return;
+                e.preventDefault();
+                if(matchActive && player && player.health>0) playerShoot(performance.now());
+            });
+            canvas.addEventListener('contextmenu', e=>e.preventDefault());
+            startMatchBtn.onclick = () => {
+                mainMenu.classList.add('hide');
+                startMatch();
+            };
+            menuBackBtn.onclick = () => {
+                matchActive = false;
+                mainMenu.classList.remove('hide');
+                resultPopup.classList.add('hide');
+                renderMenu();
+            };
+            closeResultBtn.onclick = () => {
+                resultPopup.classList.add('hide');
+                mainMenu.classList.remove('hide');
+                matchActive = false;
+                renderMenu();
+            };
+        }
+        
+        // Start
+        renderMenu();
         initEvents();
-        winCountSpan.innerText = winsPerBrawler[currentBrawlerId];
-        requestAnimationFrame(gameLoop);
-        // Hinweis in Konsole
-        console.log("Brawl Stars Team Arena - Drücke Ziffern 1-7 zum Brawler wechseln (freigeschaltete)");
+        animate(0);
     })();
 </script>
 </body>
